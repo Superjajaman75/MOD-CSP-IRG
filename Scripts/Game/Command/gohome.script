@@ -1,0 +1,159 @@
+//******************************************************************************************
+// #Version 1.9#
+//
+// 		Changes: - Activates sirens on ambulances and mcu when they have transports.
+//			 - Watertender with hose connections will execute DummyGoHome script.
+//			 - ObjectPath will be removed if vehicle has one.
+//			 - Command won't be executed when vehicle is in fire station.
+//
+//******************************************************************************************
+
+const char CMD_SIREN[]				= "VcmdSiren";
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char DUMMY_WARNINGLIGHTS[]		= "DummyHasWarningLights";
+const char CMD_WARNINGLIGHTS_ON[] 		= "VcmdWarningLightsOn";
+const char CMD_FLASHINGLIGHTS[] 	= "VcmdFlashingLights";
+const char CMD_FLOODLIGHTS_OFF[] 		= "VcmdFloodLightsOff";
+const char CMD_FLOODLIGHTS_ON[] 		= "VcmdFloodLightsOn";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char DUMMY_PATROL[] 			= "DummyPatrol";
+const char DUMMY_HOSESON[] 			= "DummyHosesAreOn";
+const char DUMMY_DISABLE[] 			= "DummyDisableSiren";
+const char OBJ_GETAWAY[]				= "mod:Prototypes/Vehicles/Police/getawaycar.e4p";
+
+object GoHome : CommandScript
+{
+	bool deinstall;
+
+	GoHome()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetNumPassengers() == 0 && StrCompare(Caller->GetPrototypeFileName(), OBJ_GETAWAY) != 0)
+				return false;
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_FMB && v.GetNumTransported() != 0)
+				return false;					
+			if (v.IsDecontaminating())
+				return false;
+			if (v.IsInstalled())
+			{
+				if (v.GetVehicleType() == VT_THW_FGRR_BKF && (!v.IsReady() || v.GetCarriedObjects().GetNumObjects()>0))
+					return false;
+				if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && /*(v.GetInstallTargetID() != -1 ||*/ v.IsUplifting())//)
+					return false;
+				if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF)
+					return false;
+			}
+		}
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+		
+		deinstall = false;
+		Vehicle v(Caller);
+		SetPriority(0);
+		if ((v.GetVehicleType() == VT_AMBULANCE_RTW || v.GetVehicleType() == VT_AMBULANCE_ITW || v.GetVehicleType() == VT_AMBULANCE_RHC) && v.GetNumTransported() > 0)
+			SetPriority(110);
+           	if (v.HasCommand(DUMMY_HOSESON))
+			return false;
+		if (v.IsInstalled())
+		{
+			if (v.GetVehicleType() == VT_THW_FGRR_BKF && (!v.IsReady() || v.GetCarriedObjects().GetNumObjects()>0))
+				return false;
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && /*(v.GetInstallTargetID() != -1 ||*/ v.IsUplifting())//)
+				return false;
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF)
+				return false;
+			deinstall = true;
+		}
+		
+		if (v.IsDecontaminating())
+		   	return false;
+		
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(DUMMY_WARNINGLIGHTS))
+		{
+			v.EnableBlinker(BLT_NONE);
+			v.RemoveCommand(DUMMY_WARNINGLIGHTS);
+			v.AssignCommand(CMD_WARNINGLIGHTS_ON);
+		} 
+		if (v.HasCommand(CMD_FLOODLIGHTS_OFF))
+		{
+			v.EnableSpecialLights(false);
+			v.RemoveCommand(CMD_FLOODLIGHTS_OFF);
+			v.AssignCommand(CMD_FLOODLIGHTS_ON);
+		}
+		if (v.HasCommand("DummyFollow"))
+			v.RemoveCommand("DummyFollow");
+		if(v.HasObjectPath(NULL))
+			Game::ExecuteCommand(DUMMY_PATROL, &v, &v);
+		if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+			Game::ExecuteCommand(DUMMY_DISABLE, &v, &v);
+		if (v.GetVehicleType() == VT_AMBULANCE_RTW || StrCompare(v.GetPrototypeFileName(), "mod:Prototypes/Vehicles/01 LA Ambulance/mass_casualty_unit.e4p") == 0)
+		{
+			v.EnableBlueLights(false);
+
+			PersonList Transports = v.GetTransports();
+			if (Transports.GetNumPersons() > 0) 
+			{
+				if (!v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+					Game::ExecuteCommand(CMD_SIREN, &v, &v);
+			}
+		}
+
+		if (v.GetVehicleType() == VT_AMBULANCE_NEF  || StrCompare(v.GetPrototypeFileName(), "mod:Prototypes/Vehicles/01 LA Ambulance/coroners_van.e4p") == 0)
+		{
+			v.EnableBlueLights(false);
+		}
+		if (!deinstall)
+		{
+			Vehicle v(Caller);
+			if (v.IsLightOn())
+			{
+				Caller->PushActionLightOn(ACTION_NEWLIST, false);
+				Caller->PushActionReturnToBase(ACTION_APPEND);
+				return;
+			}
+			if (v.GetVehicleType() == VT_THW_FGRT_BH && v.HasTransportOnStretcher())
+			{
+				ScriptInterface::ShowMessageTickerTextForSinglePlayer(Caller, "HINT_FGRT_NOBACKTOBASE");
+				return;
+				
+			}
+			Caller->PushActionReturnToBase(ACTION_NEWLIST);
+		} 
+		else
+		{
+			Vehicle v(Caller);
+			if(v.GetVehicleType() == VT_FIREFIGHTERS_DLK && v.IsUplifted())
+			{
+				Caller->PushActionBasketDown(ACTION_NEWLIST, Vector(0.f, 0.f, 0.f));
+				Caller->PushActionDeinstall(ACTION_APPEND);
+				Caller->PushActionReturnToBase(ACTION_APPEND);
+			}
+			else
+			{
+				Caller->PushActionDeinstall(ACTION_NEWLIST);
+				Caller->PushActionReturnToBase(ACTION_APPEND);
+			}
+		}
+	}
+};

@@ -1,0 +1,322 @@
+//******************************************************************************************
+// #Version 1.6#
+//
+// 		Changes: - Doctor (paramedic) will enter Ambulance via REARDOOR.
+//			 - Almost all units can enter all police type cars.
+//			 - Units in FBI command vehicle will be healed
+//			 - Compatible with police dog
+//
+//******************************************************************************************
+
+const char DUMMY_FULLHEAL[]				= "DummyFullHeal";
+const char OBJ_CRANE_NORMAL[]			= "mod:Prototypes/Vehicles/02 LA Fire Department/heavy_rescue_crane.e4p";
+const char OBJ_CRANE_REVERSED[]			= "mod:Prototypes/Vehicles/02 LA Fire Department/heavy_rescue_crane_rev.e4p";
+const char NAME_DOG[]					= "LASDDog";
+const char DUMMY_DOG[]					= "DummyDog";
+const char OBJ_VTP[]					= "mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p";
+const char OBJ_BATEAU[]					= "mod:Prototypes/Vehicles/Fire Department/Bateau.e4p";
+
+
+int DummyGroup = 20;
+
+object EnterCar : CommandScript
+{
+	Vector TargetPos;
+	bool NotInLandingStage;
+	
+	EnterCar()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_NOTDESTROYED);
+		SetNeedsConnectedHose(CFN_FAIL);
+		SetPriority(200);
+		SetSelfClickActivation(true);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;	
+
+		return true;
+	}
+	
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target || !Target->IsValid() || Target->GetType()!=ACTOR_VEHICLE)
+			return false;
+		
+		SetPriority(200);
+		if (Input::PriorityKeyPressed())
+			SetPriority(2000);
+		
+		
+		Vehicle v(Target);
+		if (v.GetEnergy() < = 0.1f * v.GetMaxEnergy())
+			return false;
+
+		if (Caller->GetObjectType()==TYPE_PERSON)
+		{
+			Person p(Caller);
+			if (p.GetEnteredCarID() != -1)
+				return false;
+			
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+			{
+				if (!p.IsLinkedWithPerson() && !p.IsCarryingPerson() && v.GetFreePassengers()==0 && !p.IsContaminated())
+					return false;
+				else if (!p.IsLinkedWithPerson() && !p.IsCarryingPerson() && p.IsContaminated() &&  v.GetFreeTransports() < 1)
+				     	return false;
+				else if ((p.IsLinkedWithPerson() || p.IsCarryingPerson()) && v.GetFreeTransports() < 2)
+					return false;
+			}
+			else 
+			if(v.GetFreePassengers()==0 && !(p.IsLinkedWithPerson() || p.IsCarryingPerson()))
+				return false;
+				
+			if ((p.IsCarryingPerson() || p.IsLinkedWithPerson()) && v.GetFreeTransports() == 0)
+				return false;
+			
+			if ((v.HasCommand("FlyTo") || v.HasCommand("VcmdDeInstallRope")) && !v.IsOnGround())
+				return false;				
+			
+			if (p.IsPulling() || (p.GetEquipment() == EQUIP_FIREHOSE && p.GetFirehoseID() > 0))
+				return false;
+				
+			switch(v.GetVehicleType())
+			{
+				case VT_NOSQUAD :
+				case VT_TAXI :
+				case VT_BUS :
+				case VT_DRIVERCAR :
+				case VT_THW_FGRB_BLF :
+				case VT_POLICE_GETAWAY :
+					return false;
+				break;
+
+				case VT_THW_FGRI_EKW :
+				case VT_FIREFIGHTERS_ASF :
+				case VT_THW_FGRR_BKF :
+				case VT_THW_FGRT_BH:
+					if(!p.HasCommand("Repair") && !p.HasCommand("Dive") && !p.HasCommand("MoveTo"))
+						return false;
+				break;
+					
+				case VT_FIREFIGHTERS_DLK :
+				case VT_FIREFIGHTERS_TLF :
+				case VT_FIREFIGHTERS_LF :
+				case VT_FIREFIGHTERS_FLB :
+				case VT_FIREFIGHTERS_LPF :
+				case VT_FIREFIGHTERS_TFMB :
+				case VT_FIREFIGHTERS_GTF :
+					if(!p.HasCommand("Heal") && !p.HasCommand("PcmdHeal") && !p.HasCommand("MoveTo") && !p.HasCommand("PcmdStabilize") && !p.HasCommand("Dive"))
+						return false;
+					if(p.IsParamedicTeam())
+						return false;
+				break;
+					
+				case VT_FIREFIGHTERS_DEKONP :
+					if (!p.HasCommand("DriveAwayPerson") && !p.IsContaminated() && !p.HasCommand("MoveTo"))
+						return false;
+					if(!p.CanEnterDekonP())
+						return false;
+				break;
+
+				case VT_FIREFIGHTERS_RW :
+					if (StrCompare(v.GetPrototypeFileName(), OBJ_VTP) == 0)
+						return true;
+					else
+						{
+							if(!p.HasCommand("Heal") && !p.HasCommand("PcmdHeal") && !p.HasCommand("MoveTo") && !p.HasCommand("PcmdStabilize") && !p.HasCommand("Dive"))
+								return false;
+							if(p.IsParamedicTeam())
+								return false;
+						}
+				break;
+				
+				case VT_FIREFIGHTERS_FMB:
+				{
+					if (v.IsInLandingStage(false, TargetPos, -0.2f) >= 0)
+					{
+						NotInLandingStage = false;
+						return true;
+					}
+					if (v.IsInLandingStage(true, TargetPos, -0.2f) >= 0)
+					{
+						NotInLandingStage = false;
+						return true;
+					};
+					NotInLandingStage = true;
+
+					if (!p.HasCommand("Dive") && !p.HasCommand("MoveTo"))
+						return false;		
+				break;
+				}
+
+				case VT_POLICE_PHC :
+				case VT_POLICE_STW :
+				case VT_POLICE_MTW :
+				case VT_POLICE_SW :
+				case VT_POLICE_WAW :
+				case VT_POLICE_GTW :
+					if(p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.IsParamedicTeam() || p.IsContaminated() || p.HasCommand("SendDog") || p.HasCommand("Dive"))
+					   	return false;
+				break;
+				
+				case VT_AMBULANCE_RHF :
+					if(!p.HasCommand("SendDog") && !p.HasCommand("CallDog") && !p.HasCommand("MoveTo"))
+						return false;
+				break;
+					
+				case VT_AMBULANCE_ITW :
+					if(p.IsCarryingPerson())
+						return false;
+					if(!p.HasCommand("Heal") && !p.HasCommand("PcmdHeal") && !p.HasCommand("PcmdStabilize") && !p.HasCommand("MoveTo") && !p.HasCommand("UnloadPerson") && !p.HasCommand("PutInCar"))
+						return false;
+					if(p.HasCommand("GetRoadBlock"))
+						return false;
+				break;
+				
+				case VT_AMBULANCE_NEF :
+					if(!p.HasCommand("Heal") && !p.HasCommand("PcmdHeal") && !p.HasCommand("PcmdStabilize") && !p.HasCommand("MoveTo"))
+						return false;
+					if(p.IsParamedicTeam())
+						return false;
+				break;
+						
+				case VT_AMBULANCE_RHC :
+				case VT_AMBULANCE_RTW :
+					if (v.GetFreePassengers() == 0)
+						return false;
+					if(!p.HasCommand("Heal") && !p.HasCommand("PcmdHeal") && !p.HasCommand("PcmdStabilize") && !p.HasCommand("MoveTo") && !p.IsParamedicTeam() && !p.HasCommand("Extinguish"))
+						return false;
+				break;
+				
+				default : return false;
+			}
+
+			if((p.HasCommand("extinguish") && (p.IsCarryingPerson() || p.IsLinkedWithPerson())) || p.IsContaminated())
+			{
+				if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+					return true;
+				else
+					return false;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Vehicle v(Target);
+
+		if (StrCompare(p.GetPrototypeFileName(), "mod:Prototypes/Persons/03 LA Police/lapd_dog_leader.e4p") == 0 && StrCompare(v.GetPrototypeFileName(), "mod:Prototypes/Vehicles/GENDARMERIE/vcin1.e4p") == 0)
+		{
+			int PersonID = p.GetID();
+			GameObjectList list = Game::GetGameObjects(NAME_DOG);
+			for(int i = 0; i < list.GetNumObjects(); i++)
+			{
+				GameObject *obj = list.GetObject(i);
+				if (obj->GetUserData() == PersonID)
+				{	
+					Person d = list.GetObject(0);
+					if(p.GetBoundingRadiusDistXYToObject(&d) < 500.f)
+					{
+						Vector TargetPos = v.GetTargetPoint(Caller, TARGET_REARDOOR);
+						p.PushActionMove(ACTION_NEWLIST, TargetPos);
+						p.PushActionTurnTo(ACTION_APPEND, Target);
+						p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_DOG, Target, 3, false);
+						d.PushActionMove(ACTION_NEWLIST, TargetPos);
+						d.PushActionTurnTo(ACTION_APPEND, Target);
+						d.PushActionExecuteCommand(ACTION_APPEND, DUMMY_DOG, Target, 4, false);
+						d.PushActionWait(ACTION_APPEND, 900.f);
+						return;
+					} else
+					 Mission::PlayHint("Police dog is not in range!");
+				}
+			}		
+		}
+		
+		if (p.IsCarryingPerson())
+		{
+			Person carried = p.GetCarried();
+			bool carriedClassified = false;
+			if (carried.IsClassified())
+				carriedClassified = true;
+			if(!carriedClassified && (v.GetVehicleType() == VT_AMBULANCE_ITW || v.GetVehicleType() == VT_AMBULANCE_RTW || v.GetVehicleType() == VT_AMBULANCE_RHC))
+			{
+				ScriptInterface::ShowMessageTickerTextForSinglePlayer(Caller, "ALLM_CLASSIFY_FIRST");
+				return;
+			}
+		}
+		
+		TargetPoint targetPoint;
+		if (v.GetVehicleType() == VT_AMBULANCE_RTW)
+			targetPoint = TARGET_REARDOOR;
+		else if (v.GetVehicleType() == VT_THW_FGRT_BH)
+			targetPoint = TARGET_REARDOOR;
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_FLB)
+		{
+			targetPoint = TARGET_OBJECTSURFACE;
+			Caller->PushActionMove(ACTION_NEWLIST, Target, targetPoint);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionEnterCar(ACTION_APPEND, Target);
+			if(StrCompare(v.GetPrototypeFileName(), OBJ_BATEAU) == 0)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyMotorboat", &v, 3, false);
+			return;
+		}
+		// diese Abfrage auf jeden Fall erst nach ITW und FMB
+		if((p.HasCommand("extinguish") && (p.IsCarryingPerson() || p.IsLinkedWithPerson())) || p.IsContaminated())
+		{
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+				targetPoint = TARGET_REARDOOR;
+		}
+
+		if (p.HasCommand("SendDog") && p.GetArrestedID() != -1)
+		{
+			targetPoint = TARGET_REARDOOR;
+			Caller->PushActionMove(ACTION_NEWLIST, Target, targetPoint);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionPutInCar(ACTION_APPEND, Target);
+			targetPoint = TARGET_PASSENGERDOOR;
+			Caller->PushActionMove(ACTION_APPEND, Target, targetPoint);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionEnterCar(ACTION_APPEND, Target);
+		}
+		else
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, targetPoint);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionEnterCar(ACTION_APPEND, Target);
+		}
+	}
+};
+
+object DummyFullHeal : CommandScript
+{
+	DummyFullHeal()
+	{
+ 		SetGroupID(DummyGroup);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+ 		return false;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		return false;
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		p.SetHealth(p.GetMaxHealth() * 1.0f);
+	}
+};

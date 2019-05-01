@@ -1,0 +1,34 @@
+object Evacuate : CommandScript
+{
+	Evacuate()
+	{
+		SetIcon("evacuatebuilding");
+		SetCursor("evacuatebuilding");
+		SetValidTargets(ACTOR_OPEN_HOUSE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+		return Game::GetNumActors(ACTOR_OPEN_HOUSE) > 0;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid())
+			return false;
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_ANY);
+		if (v.HasCommand("FlyTo"))
+			v.PushActionFlyTo(ACTION_NEWLIST, TargetPos, false, 0.0f);
+		else
+			v.PushActionMove(ACTION_NEWLIST, TargetPos);
+		v.PushActionEvacuate(ACTION_APPEND, Target);
+	}
+};

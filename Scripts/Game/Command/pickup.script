@@ -1,0 +1,192 @@
+//******************************************************************************************
+// #Version 1.4#
+//
+// 		Changes: - Units can pick up police barricade and traffic cone.
+//			   - Emergency 4 Deluxe compatible
+//				- Motorboat change
+//				- Wye compatibility
+//
+//******************************************************************************************
+
+const char OBJ_BARRICADE[] 			= "mod:Prototypes/Vehicles/06 Objects/barricade02.e4p";
+const char OBJ_RIOT_OFFICER[] 		= "mod:Prototypes/Persons/03 Police/nypd_riot.e4p";
+
+object PickUp : CommandScript
+{
+	PickUp()
+	{
+		SetIcon("liftwithcrane");
+		SetCursor("liftwithcrane");
+		// Vehicle wird fürs Motorboot gebraucht
+		SetValidTargets(ACTOR_OBJECT | ACTOR_PERSON | ACTOR_VEHICLE);
+		SetRestrictions2(RESTRICT2_CANBEPICKEDUP);
+		SetGroupID(CGROUP_PICKUP);
+		SetPossibleEquipment(EQUIP_NONE);
+		SetGroupLeader(true);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid())
+			return false;
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() == VT_THW_FGRR_RL)
+				return !v.IsCarryingAnything();
+			return true;
+		}
+		if (Caller->GetType() == ACTOR_PERSON)
+		{
+			Person p(Caller);
+			if (p.HasCommand("PcmdFormLine") || p.HasCommand("PcmdWye") || p.HasCommand("PcmdExtendhose"))
+				return true;
+		}
+
+		return !Caller->IsCarryingAnything();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_FMB)
+			{
+				return v.GetFreeTransports() > 0 && (Game::ExistsNormalObjectWithFlagSet(OF_FLOTSAM) || Game::ExistsDrowningPerson());
+			}
+			else if (v.GetVehicleType() == VT_THW_FGRR_RL)
+			{
+				return !v.IsCarryingAnything() && Game::ExistsNormalObjectWithFlagSet(OF_CARRYABLE_BY_BULLDOZER);
+			}
+		}
+		if (Caller->GetType() == ACTOR_PERSON)
+		{
+			Person p(Caller);
+			if (p.GetArrestedID() != -1)
+				return false;
+		}
+		if (Caller->IsCarryingAnything())
+			return false;
+		if (Caller->HasCommand("GetRoadBlock"))
+			return Game::ExistsInstalledRoadblock();			
+		//else if (Caller->HasCommand("Extinguish"))
+		//	return Game::ExistsInstalledJumppad() || Game::ExistsPickableAnimal();
+		else if (Caller->HasCommand("PcmdFormLine") || Caller->HasCommand("PcmdWye") || Caller->HasCommand("PcmdExtendhose"))
+			return true;
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->IsEquipped() || !Target->IsValid() || Caller->GetID()==Target->GetID())
+			return false;		
+		Vehicle v(Caller);
+		// (dg) special code for rl
+		if (v.IsValid() && (v.GetVehicleType() == VT_THW_FGRR_RL))
+		{
+			GameObjectList l = v.GetCarriedObjects();
+			int numObjects = l.GetNumObjects();
+			if (numObjects > 0)
+				return false;
+			GameObject obj(Target);
+			if (obj.IsValid() && obj.IsFlagSet(OF_CARRYABLE_BY_BULLDOZER))
+				return true;
+		}
+		Vehicle m(Target);
+		if(StrCompare(m.GetPrototypeFileName(), OBJ_BARRICADE) == 0 && Caller->HasCommand("PcmdFormLine"))
+			return true;
+		else if(StrCompare(Caller->GetPrototypeFileName(), OBJ_RIOT_OFFICER) == 0 && StrCompare(m.GetPrototypeFileName(), OBJ_BARRICADE) != 0)
+			return false;
+		else if(StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/wye.e4p") == 0 && !m.IsInstalled() && Caller->HasCommand("PcmdWye"))
+			return true;
+		else if(StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/fire_hose_extension.e4p") == 0 && !m.IsInstalled() && Caller->HasCommand("PcmdExtendhose"))
+			return true;			
+		else if (v.IsValid() && (v.GetVehicleType() == VT_FIREFIGHTERS_FMB))
+		{
+			GameObjectList l = v.GetCarriedObjects();
+			int numObjects = l.GetNumObjects();
+			if (v.GetFreeTransports() <= 0)
+				return false;
+			Person p(Target);
+			GameObject obj(Target);
+			if ((obj.IsValid() && obj.IsFlagSet(OF_FLOTSAM)) || (p.IsValid() && p.IsDrowning()))
+				return true;
+		} 
+		else if (Target->GetType() == ACTOR_VEHICLE)
+			return false;
+
+		if (!Caller->HasCommand("PcmdFormLine") && Caller->IsCarryingAnything())
+			return false;
+			
+		GameObject obj(Target);
+		
+		// don't pickup jumppad which is in use
+		if ( obj.IsJumppad() && obj.HasAnyAction() )
+			return false;
+
+		//if(StrCompare(obj.GetPrototypeFileName(), OBJ_BARRICADE) == 0 && Caller->HasCommand("PcmdFormLine"))
+		//	return true;	
+		if (obj.IsValid() && (obj.IsJumppad() || obj.IsRoadblock())	&& obj.GetObjectType()!= TYPE_PERSON && obj.GetObjectType()!= TYPE_VEHICLE)
+			return true;
+		if (obj.GetType() == ACTOR_PERSON && obj.IsFlagSet(OF_PULLABLE))
+		{
+			Person p(Target);
+			if (p.IsDead() && p.GetRole() == ROLE_ANIMAL)
+				return true;
+		}		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		Vehicle m(Target);	
+		if(StrCompare(m.GetPrototypeFileName(), OBJ_BARRICADE) == 0)
+		{
+			Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_ANY);
+			if (Caller->HasCommand("DummyRiot")) Caller->RemoveCommand("DummyRiot");						
+			Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyRiot", Target, 0, false);
+		}
+		else if(StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/wye.e4p") == 0 || StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/fire_hose_extension.e4p") == 0)
+		{
+			Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_ANY);
+
+			Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);			
+			if (StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/wye.e4p") == 0)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "PcmdWye", Target, 2, false);
+			if (StrCompare(m.GetPrototypeFileName(), "mod:Prototypes/Vehicles/06 Objects/fire_hose_extension.e4p") == 0)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "PcmdExtendhose", Target, 2, false);				
+		}		
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_FMB)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_FOLLOW);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionPickUp(ACTION_APPEND, Target);
+			if(StrCompare(Caller->GetPrototypeFileName(), "mod:Prototypes/Vehicles/Fire Department/fmb.e4p") == 0 || StrCompare(Caller->GetPrototypeFileName(), "mod:Prototypes/Vehicles/02 Fire Department/Rescue1_boat.e4p") == 0)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyMotorboat", Caller, 3, false);				
+		}
+		else
+		{
+			Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_ANY);
+			
+			Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			if (v.GetVehicleType() == VT_THW_FGRR_RL)
+			if (v.IsBucketUp())
+			{
+				Caller->PushActionMoveBucket(ACTION_APPEND, Target, false);
+			}
+			Caller->PushActionPickUp(ACTION_APPEND, Target);
+			if (v.GetVehicleType() == VT_THW_FGRR_RL)
+			{
+				Caller->PushActionMoveBucket(ACTION_APPEND, Target, true);
+			}
+		}
+	}
+};

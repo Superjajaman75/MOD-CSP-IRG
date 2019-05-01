@@ -1,0 +1,145 @@
+//******************************************************************************************
+// #Version 1.4#
+//
+// 		Changes: - Activates warninglights.
+//                   - Cannot execute while in fire station.
+//
+//******************************************************************************************
+
+const char CMD_WARNINGLIGHTS_ON[] 		= "VcmdWarningLightsOn";
+const char DUMMY_WARNINGLIGHTS[]		= "DummyHasWarningLights";
+const char VO_EPA[]						= "fs_epa1";
+
+object Install: CommandScript
+{
+	Vector TargetPos;
+	VehicleType vtype;
+	int InstallPointID;
+
+	Install()
+	{
+		SetValidTargets(ACTOR_VEHICLE|ACTOR_OPEN_HOUSE|ACTOR_FLOOR);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);		
+	}
+	
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		Vehicle v(Caller);
+		return !v.IsInstalled();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		Vehicle v(Caller);
+		if (v.IsCollidingWithVirtualObject(VO_EPA))
+			return false;
+		else if (v.GetVehicleType() == VT_THW_FGRB_BLF)
+			return Game::ExistsFreeBridgeInstallPoint();
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK)
+			return true;//Game::ExistsFreeDLKInstallPosition();
+
+		return false;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		Vehicle v(Caller);
+		vtype = v.GetVehicleType();
+		if (vtype == VT_FIREFIGHTERS_DLK)
+		{
+			if (!Target->IsValid() || v.IsUplifting())// || (v.IsInstalled() && !v.IsBasketEmpty()))
+				return false;
+			if(Target->GetType() == ACTOR_OPEN_HOUSE)
+			{
+				OpenHouse targetHouse(Target);
+				if (!targetHouse.IsValid() || targetHouse.HasGroundEntrance()
+					|| !targetHouse.IsFlagSet(OF_ACCESSIBLE) || v.GetInstallTargetID() == Target->GetID())
+				        return false;
+						
+				int PlayerID = v.GetPlayerMP();					//Impossibilité au client de faire l'installation d'epa sur un batiment
+				if (Game::IsMultiplayer() && PlayerID != 0)
+					return false;
+				
+				return true;
+			}
+			if(Caller->GetID() == Target->GetID() && !v.IsInstalled() && !v. IsUplifted())
+			{
+				return true;
+			}			
+			return false;			
+		} else 
+		if (vtype == VT_THW_FGRB_BLF)
+		{
+			if (Caller->GetID() == Target->GetID() || v.IsFGRBEmpty())
+				return false;
+			TargetPos = Game::GetCommandPos();
+			InstallPointID = v.GetBridgeInstallPoint(TargetPos.x, TargetPos.y, TargetPos.z);
+			if (InstallPointID == -1)
+				return false;
+			return true;
+		}
+			
+		return false;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (vtype == VT_THW_FGRB_BLF)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, InstallPointID, TARGET_INSTALL_FGRB);
+			Caller->PushActionInstall(ACTION_APPEND, InstallPointID);
+		}
+		else if (vtype == VT_FIREFIGHTERS_DLK)
+		{
+			Vehicle v(Caller);
+			bool deinstall = false;
+			bool basketdown = false;
+			if (Target->GetType() == ACTOR_OPEN_HOUSE)
+			{
+				if (v.IsInstalled())
+				   	deinstall = true;
+				if (v.IsUplifted())
+				   	basketdown = true;
+				TargetPos = Target->GetTargetPoint(Caller, TARGET_ENTRY_WINDOW_PARKING);
+			}
+			if(Caller->GetID() != Target->GetID() || v.IsInstalled() || v. IsUplifted())
+			{
+				if (basketdown && deinstall)
+				{
+					Caller->PushActionBasketDown(ACTION_NEWLIST, Vector(0.f, 0.f, 0.f));
+					Caller->PushActionDeinstall(ACTION_APPEND);
+					Caller->PushActionMove(ACTION_APPEND, TargetPos);
+				}
+				else if (deinstall)
+				{
+					Caller->PushActionDeinstall(ACTION_NEWLIST);
+					Caller->PushActionMove(ACTION_APPEND, TargetPos);
+				}
+				else if (basketdown)
+				{
+					Caller->PushActionBasketDown(ACTION_NEWLIST, Vector(0.f, 0.f, 0.f));
+					Caller->PushActionMove(ACTION_APPEND, TargetPos);
+				}
+				else
+				    Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+				if (!deinstall)
+				   	Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			}
+			Caller->PushActionInstall(ACTION_APPEND, Target);
+			//v.EnableSpecialLights(true);
+			if (v.HasCommand(CMD_WARNINGLIGHTS_ON) && !v.HasCommand(DUMMY_WARNINGLIGHTS))
+			{
+				v.EnableBlinker(BLT_BOTH);
+				v.AssignCommand(DUMMY_WARNINGLIGHTS); 
+			}		
+		}
+	}
+};

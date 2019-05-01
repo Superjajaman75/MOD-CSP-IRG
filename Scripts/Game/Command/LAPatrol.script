@@ -1,0 +1,184 @@
+//******************************************************************************************
+// #Version 1.3#
+//
+// 		Includes: Patrol command for police vehicles.
+//
+//	- VcmdPatrol
+//	- VcmdPatrolAmbulance
+//	- DummyPatrol
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_SIREN[]					= "VcmdSiren";
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char CMD_WARNINGLIGHTS_OFF[] 		= "VcmdWarningLightsOff";
+const char CMD_WARNINGLIGHTS_ON[] 		= "VcmdWarningLightsOn";
+const char CMD_FLOODLIGHTS_OFF[] 		= "VcmdFloodLightsOff";
+const char CMD_FLOODLIGHTS_ON[] 		= "VcmdFloodLightsOn";
+const char CMD_STANDBY_ON[]				= "VcmdStandbyOn";
+const char CMD_STANDBY_OFF[]			= "VcmdStandbyOff";
+const char CMD_PATROL[] 				= "VcmdPatrol";
+const char DUMMY_PATROL[] 				= "DummyPatrol";
+const char DUMMY_DISABLE[] 				= "DummyDisableSiren";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char PATH_PATROL01[] 				= "patrolpath01";
+const char PATH_PATROL02[] 				= "patrolpath02";
+
+int DummyGroup = 31;
+
+object VcmdPatrol : CommandScript
+{
+	VcmdPatrol()
+	{
+		SetCursor("patrol");
+		SetIcon("patrol");
+		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (!Game::IsFreeplay() && !Game::IsMultiplayer())
+			return false;
+		
+		Vehicle v(Caller);
+		PersonList passengers = v.GetPassengers();
+ 		if (passengers.GetNumPersons() < 1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		if (v.HasCommand("DummyFollow"))
+			v.RemoveCommand("DummyFollow");
+		if (v.HasCommand(CMD_STANDBY_OFF))
+		{
+			v.RemoveCommand(CMD_STANDBY_OFF);
+			v.AssignCommand(CMD_STANDBY_ON);
+		}
+		if (v.HasCommand(CMD_WARNINGLIGHTS_OFF))
+		{
+			v.EnableBlinker(BLT_NONE);
+			v.RemoveCommand(CMD_WARNINGLIGHTS_OFF);
+			v.AssignCommand(CMD_WARNINGLIGHTS_ON);
+		} 
+		if (v.HasCommand(CMD_FLOODLIGHTS_OFF))
+		{
+			v.EnableSpecialLights(false);
+			v.RemoveCommand(CMD_FLOODLIGHTS_OFF);
+			v.AssignCommand(CMD_FLOODLIGHTS_ON);
+		}
+		if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+			Game::ExecuteCommand(DUMMY_DISABLE, &v, &v);
+		v.EnableBlueLights(false);
+		
+		if (v.IsCollidingWithVirtualObject("patrol01")) //Fix for ambulances getting stuck at hospital on the new freeplay map
+		{
+			ActorList l1 = Game::GetActors("patrol02");
+			if(l1.GetNumActors() > 0)
+			{
+				Vector Move = l1.GetActor(0)->GetPosition();
+				v.PushActionMove(ACTION_NEWLIST, Move);
+				v.PushActionExecuteCommand(ACTION_APPEND, CMD_PATROL, Caller, 0, false);
+				return;
+			}		
+		}
+
+		v.SetSpeed(6.4f);
+		
+		PathList p1l(PATH_PATROL01);
+		Path path1 = p1l.GetPath(0);
+
+		PathList p2l(PATH_PATROL02);
+		Path path2 = p2l.GetPath(0);
+
+
+		int index1 = path1.GetNearestPointIndex(v.GetPosition());
+		Vector pt1 = path1.GetPoint(index1);
+
+		int index2 = path2.GetNearestPointIndex(v.GetPosition());
+		Vector pt2 = path2.GetPoint(index2);
+
+		int random = rand()%2;
+		Vector target;
+		if (Math::dist(pt1.x, pt1.y, v.GetPosition().x, v.GetPosition().y) > Math::dist(pt2.x, pt2.y, v.GetPosition().x, v.GetPosition().y))
+		{
+			if (random == 1)
+				v.SetObjectPath(PATH_PATROL02, 6.4f, true);
+			else
+				v.SetObjectPath(PATH_PATROL02, 6.4f, false);
+			target = pt2;
+		} else
+		{
+			if (random == 1)
+				v.SetObjectPath(PATH_PATROL01, 6.4f, true);
+			else
+				v.SetObjectPath(PATH_PATROL01, 6.4f, false);
+			target = pt1;
+		}
+
+		Path path = v.GetObjectPath();
+		v.AssignCommand(DUMMY_PATROL);
+		v.PushActionMove(ACTION_NEWLIST, target);
+		v.PushActionUsePath(ACTION_APPEND, &path, true, 6.5f);
+	}
+};
+
+
+
+object DummyPatrol : CommandScript
+{
+	DummyPatrol()
+	{
+ 		SetGroupID(DummyGroup);
+	}
+
+ 	bool CheckGroupVisibility(GameObject *Caller)
+ 	{
+ 		return false;
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		return false;
+ 	} 
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		return false;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.RemoveObjectPath();
+		if (v.HasCommand(DUMMY_PATROL))
+			v.RemoveCommand(DUMMY_PATROL);
+		if(v.IsPolice())
+			v.SetSpeed(20.0f);
+		else {
+			v.SetSpeed(12.0f);
+			System::Log("Vehicle on patrol not identified!");
+		}
+	}	
+};
+

@@ -1,0 +1,18 @@
+bool OnLoad()
+{
+	start();
+	return true;
+}
+
+void start()
+{
+	GameObjectList l1("gate_pol");
+	GameObject Obj = l1.GetObject(0);
+ 	Game::ExecuteCommand("DummyCheckWaterSupply", &Obj);
+	Game::ShowHelpTextWindow("Pour apprendre a jouer au Mod, regardez nos tutoriels sur : http://tuto.csp-irg.fr \nEn cas de probleme : http://helpdesk.csp-irg.fr \nRejoignez la communaute sur : http://forum.csp-irg.fr", 15.f);
+	Game::ExecuteCommand("Init_CSP", &Obj);
+	Game::ExecuteCommand("Init_CPI", &Obj);
+	Game::ExecuteCommand("Init_SMUR", &Obj);
+	Game::ExecuteCommand("Init_TEC", &Obj);
+	Game::ExecuteCommand("Init_MEDSP", &Obj);
+};

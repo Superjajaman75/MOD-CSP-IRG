@@ -1,0 +1,77 @@
+const char DUMMY_EQUIPMENT[] 			= "DummyEquipmentCommands";
+
+
+object VcmdRapidDeployDesincar : CommandScript
+{
+	VcmdRapidDeployDesincar()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetIcon("useshears");
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid() || !Caller->HasCommand("VcmdRapidDeployDesincar"))
+			return false;
+
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if(v.GetNumPassengers() == 0)
+				return false;
+		}
+
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->GetID() == Target->GetID())
+			return false;
+
+		Vehicle v(Caller);
+		return v.GetNumPassengers() > 0;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.PushActionWait(ACTION_NEWLIST, 1);
+		PersonList l = v.GetPassengers();
+		Vector pos = v.GetPosition();
+		TargetPoint targetPoint;
+		targetPoint = TARGET_EQUIPMENTDOOR;
+		Game::FindFreePosition(l.GetPerson(0),pos);
+
+		{
+		if (!Caller->HasCommand("GetShears"))
+			l.GetPerson(0)->PushActionLeaveCar(ACTION_NEWLIST, Caller);
+			l.GetPerson(0)->SetUserData(v.GetID());
+			l.GetPerson(0)->SetPlayerMP(v.GetPlayerMP());
+			l.GetPerson(0)->SetCommandable(false);
+			l.GetPerson(0)->PushActionMove(ACTION_APPEND, &v, targetPoint);
+			l.GetPerson(0)->PushActionTurnTo(ACTION_APPEND, &v);
+			l.GetPerson(0)->PushActionGetEquipment(ACTION_APPEND, &v, EQUIP_SHEARS);
+			l.GetPerson(0)->PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, Caller, 5, false);
+			l.GetPerson(0)->SetCommandable(true);
+			l.GetPerson(0)->PushActionMove(ACTION_APPEND,pos);
+		}
+		PersonList passengers = v.GetPassengers();
+		if (passengers.GetNumPersons() > 1)
+		{
+		if (!Caller->HasCommand("GetExtinguisher"))
+			l.GetPerson(1)->PushActionWait(ACTION_NEWLIST,1.5f);
+			l.GetPerson(1)->PushActionLeaveCar(ACTION_NEWLIST, Caller);
+			l.GetPerson(1)->SetUserData(v.GetID());
+			l.GetPerson(1)->SetPlayerMP(v.GetPlayerMP());
+			l.GetPerson(1)->SetCommandable(false);
+			l.GetPerson(1)->PushActionMove(ACTION_APPEND, Caller, TARGET_EQUIPMENTDOOR);
+			l.GetPerson(1)->PushActionTurnTo(ACTION_APPEND, Target);
+			l.GetPerson(1)->PushActionGetEquipment(ACTION_APPEND, l.GetPerson(1),EQUIP_FIRE_EXTINGUISHER);
+			l.GetPerson(1)->PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, Caller, 8, false);
+			l.GetPerson(1)->SetCommandable(true);
+			Game::FindFreePosition(l.GetPerson(1),pos);
+			l.GetPerson(1)->PushActionMove(ACTION_APPEND,pos);
+		}
+	}
+};

@@ -1,0 +1,92 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Dead bodies will be covered with a tarp
+//
+//		By Hoppah
+//
+//******************************************************************************************
+
+const char OBJ_CORONER[] 		= "mod:Prototypes/Persons/Ambulance/pompe.e4p";
+const char CMD_DEAD[]			= "PcmdDead";
+
+object CheckVictim : CommandScript
+{	
+	CheckVictim()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		//SetPriority(1000);
+		SetPossibleExists(CPE_INJURED_PERSON);
+		SetPossibleEquipment(EQUIP_NONE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		
+		if (!Caller->HasCommand("PcmdTrafficConeGet") && !Caller->HasCommand("Lift"))
+			return false;
+			
+		Person p(Caller);
+		if(!p.IsValid() || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.GetEnteredCarID() != -1 || p.IsPhysicsSimulationEnabled())
+			return false;
+			
+		return true;	
+		//return Game::IsHomicideEventRunning();
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->IsEquipped() || !Target->IsValid() || Target->GetID() == Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		Person t(Target);
+		
+		if (t.IsDead() && StrCompare(p.GetPrototypeFileName(), OBJ_CORONER) != 0)
+			SetPriority(1000);
+			
+		if(p.IsValid() && t.IsValid() && t.IsDead() && !t.IsCarried() && t.GetRole()!=ROLE_ANIMAL && !t.IsRescueDog() && !t.IsDrowning())
+		{
+			if (p.GetEnteredCarID() != -1 && p.GetEnteredCarTargetID() != t.GetEnteredHouseID())
+				return false;
+			if (p.GetEnteredCarID() == -1 && t.GetEnteredHouseID() != -1 && t.GetEnteredHouseID() != p.GetEnteredHouseID() && !t.IsInHouseWithGroundEntrance())
+				return false;
+			//if (!t.IsVictim())
+			//	return false;
+			if(!t.IsVictim() && t.HasCommand("DummyBlanket"))
+				return false;
+				
+			return true;
+		}		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Person t(Target);
+		if (p.GetEnteredCarID() == -1)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_TOUCHPERSON);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		}
+		else
+		{
+			Person pt(Target);
+			if (pt.GetEnteredHouseID() == p.GetEnteredCarTargetID())
+			{
+				Caller->PushActionEnterHouse(ACTION_NEWLIST, pt.GetEnteredHouseID());
+				Caller->PushActionMove(ACTION_APPEND, Target, TARGET_TOUCHPERSON);
+				Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			}
+			else
+				Caller->PushActionTurnTo(ACTION_NEWLIST, Target);
+		}
+		if (t.IsVictim())
+			Caller->PushActionCheckVictim(ACTION_APPEND, &t, 5.f); 
+		if (t.IsDead() && t.IsClassified() && !t.HasCommand("DummyBlanket"))
+			Caller->PushActionExecuteCommand(ACTION_APPEND, CMD_DEAD, &t, 0, false);
+	}
+};

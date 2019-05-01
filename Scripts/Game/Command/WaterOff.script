@@ -1,0 +1,39 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Priority lowered.
+//
+//******************************************************************************************
+
+object WaterOff : CommandScript
+{
+	WaterOff()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetDoubleClickable(true);
+		SetGroupID(CGROUP_CANNON_WAW);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetDeselectCaller(false);
+		SetPriority(90);
+	}
+	
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		return Caller->IsWaterCannonActive();
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if(Caller && Target && Caller->GetID()==Target->GetID())
+			return Caller->IsWaterCannonActive();
+		
+		return false;
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Caller->PushActionWaterOff(ACTION_NEWLIST);
+	}
+};

@@ -1,0 +1,74 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - UseJumppad and RemoveEquipment command will be removed.
+//
+//******************************************************************************************
+
+const char DUMMY_EQUIPMENT[] 		= "DummyEquipmentCommands";
+
+object UseJumppad : CommandScript
+{
+	UseJumppad()
+	{
+		SetValidTargets(ACTOR_OPEN_HOUSE);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleEquipment(EQUIP_JUMPPAD);
+		SetPossibleExists(CPE_HOUSE_FOR_JUMPPAD);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON || Caller->GetEquipment()!=EQUIP_JUMPPAD)
+			return false;
+		return Game::ExistsHouseForJumpad();
+	}*/
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if(!Caller->IsValid() || Caller->GetEquipment()!= EQUIP_JUMPPAD )
+			return false;
+
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if(p.GetEnteredCarID() != -1)
+			return false;
+
+		if ( Target->GetType() == ACTOR_OPEN_HOUSE )
+		{
+			OpenHouse house(Target);
+			if ( house.HasJumppadTarget() )
+				return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		OpenHouse house(Target);
+		Vector TargetPos = house.GetJumppadTarget();
+
+		Caller->PushActionMove(ACTION_APPEND, TargetPos);
+		Caller->PushActionUseEquipment(ACTION_APPEND, Target, ChildID, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, Target, 10, false); 
+
+		// go back 300 units
+		Vector BackPos = Caller->GetPosition();
+		BackPos.x -= TargetPos.x;
+		BackPos.y -= TargetPos.y;
+		BackPos.z -= TargetPos.z;
+		float len = Math::dist(BackPos.x, BackPos.y, BackPos.z, 0, 0, 0);
+		if ( len )
+		{
+			BackPos.x *= 300/len;
+			BackPos.y *= 300/len;
+			BackPos.z *= 300/len;
+		}
+		BackPos.x += TargetPos.x;
+		BackPos.y += TargetPos.y;
+		BackPos.z += TargetPos.z;
+		Caller->PushActionMove(ACTION_APPEND, BackPos);
+	}
+};

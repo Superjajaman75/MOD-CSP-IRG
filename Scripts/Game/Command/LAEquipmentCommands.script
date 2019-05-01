@@ -1,0 +1,380 @@
+//******************************************************************************************
+// #Version 1.4#
+//
+// 		Includes:  DummyEquipmentCommands script.
+//
+//******************************************************************************************
+
+const char CMD_USEAXE[]				= "UseAxe";
+const char CMD_USECHAINSAW[]		= "UseChainSaw";
+const char CMD_ATTACHHOSE[]			= "AttachFireHose";
+const char CMD_REMOVEHOSE[]			= "RemoveFireHose";
+const char CMD_USEJUMPPAD[]			= "UseJumppad";
+const char CMD_USESHEARS[]			= "UseShears";
+const char CMD_USEROADBLOCK[]		= "UseRoadBlock";
+const char CMD_THROW[]				= "Throw";
+const char CMD_EXTINGUISH[]			= "Extinguish";
+const char CMD_COOL[]				= "Cool";
+const char CMD_EXTEND[]				= "PcmdExtendhose";
+const char CMD_WYE[]				= "PcmdWye";
+const char CMD_REMOVEEQUIPMENT[]	= "RemoveEquipment";
+const char CMD_ARREST[]				= "Arrest";
+
+const char CMD_HEAL[]				= "Heal";
+
+const char OBJ_SPCDHR[]					= "mod:Prototypes/Persons/Fire Department/SP_CDHR.e4p";
+
+int DummyGroup = 20;
+
+object DummyEquipmentCommands : CommandScript
+{
+ 	DummyEquipmentCommands()
+ 	{
+		SetGroupID(DummyGroup);
+ 	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		return false;
+	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		return false;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(childID == 1) //GetAxe
+		{
+			Caller->AssignCommand(CMD_USEAXE);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+		}
+		if(childID == 2) //GetChainsaw
+		{
+			Caller->AssignCommand(CMD_USECHAINSAW);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			}
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+ 		}
+		if(childID == 3) //GetHose
+		{
+			Caller->AssignCommand(CMD_ATTACHHOSE);
+			Caller->AssignCommand(CMD_REMOVEHOSE);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE); 
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (!Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->AssignCommand(CMD_EXTINGUISH);
+			if (!Caller->HasCommand(CMD_COOL))
+				Caller->AssignCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}	
+		}
+		if(childID == 4) //GetJumppad
+		{  
+			Caller->AssignCommand(CMD_USEJUMPPAD);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+ 			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+ 		}
+		if(childID == 5) //GetShears
+		{
+			Caller->AssignCommand(CMD_USESHEARS);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+		}
+		if(childID == 6) //GetRoadblock
+		{  
+			Caller->AssignCommand(CMD_USEROADBLOCK);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+ 		}
+		if(childID == 7) //GetFlashbang
+		{
+			Caller->AssignCommand(CMD_THROW);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			}
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD); 
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+		}
+		if(childID == 8) //GetExtinguisher
+		{
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (!Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->AssignCommand(CMD_EXTINGUISH);
+			if (!Caller->HasCommand(CMD_COOL))
+				Caller->AssignCommand(CMD_COOL);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+		}
+		if(childID == 9) //GetEMTBAG
+		{
+			Person p(Caller);
+			p.SetAutoHealDistance(1000.f);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+			if (!Caller->HasCommand(CMD_HEAL))
+				Caller->AssignCommand(CMD_HEAL);
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			} 
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+		}
+		if(childID == 10) //For RemoveEquipment
+		{  
+			Caller->RemoveCommand(CMD_REMOVEEQUIPMENT);
+			if (Caller->HasCommand(CMD_HEAL))
+			{
+				Caller->RemoveCommand(CMD_HEAL);
+				Person p(Caller);
+				p.SetAutoHealDistance(0.0f);
+			}
+			if (Caller->HasCommand(CMD_USEAXE))
+				Caller->RemoveCommand(CMD_USEAXE);
+			if (StrCompare(Caller->GetPrototypeFileName(), OBJ_SPCDHR) != 0)
+			{
+				if (Caller->HasCommand(CMD_WYE))
+					Caller->RemoveCommand(CMD_WYE);
+				if (Caller->HasCommand(CMD_EXTEND))
+					Caller->RemoveCommand(CMD_EXTEND);
+			}
+			if (Caller->HasCommand(CMD_USECHAINSAW))
+				Caller->RemoveCommand(CMD_USECHAINSAW);
+			if (Caller->HasCommand(CMD_ATTACHHOSE))
+			{
+				Caller->RemoveCommand(CMD_ATTACHHOSE);
+				Caller->RemoveCommand(CMD_REMOVEHOSE);
+			}
+			if (Caller->HasCommand(CMD_USEJUMPPAD))
+				Caller->RemoveCommand(CMD_USEJUMPPAD);
+			if (Caller->HasCommand(CMD_USESHEARS))
+				Caller->RemoveCommand(CMD_USESHEARS);
+			if (Caller->HasCommand(CMD_USEROADBLOCK))
+				Caller->RemoveCommand(CMD_USEROADBLOCK);
+			if (Caller->HasCommand(CMD_THROW))
+				Caller->RemoveCommand(CMD_THROW);
+			if (Caller->HasCommand(CMD_EXTINGUISH))
+				Caller->RemoveCommand(CMD_EXTINGUISH);
+			if (Caller->HasCommand(CMD_COOL))
+				Caller->RemoveCommand(CMD_COOL);
+		}
+		if(childID == 11) //For Pick up roadblock
+		{  
+			Caller->AssignCommand(CMD_USEROADBLOCK);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+		}
+		if(childID == 12) //For Pick up jumppad
+		{  
+			Caller->AssignCommand(CMD_USEJUMPPAD);
+			if (!Caller->HasCommand(CMD_REMOVEEQUIPMENT))
+				Caller->AssignCommand(CMD_REMOVEEQUIPMENT);
+		}
+	}
+};

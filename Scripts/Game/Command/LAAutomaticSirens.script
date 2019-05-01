@@ -1,0 +1,100 @@
+//******************************************************************************************
+// #Version 1.3#
+//
+// 		Includes: All Automatic Sirens commands
+//
+//	- VcmdAutoSirenOn
+//	- VcmdAutoSirenOff
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_AUTOSIREN_ON[]			= "VCmdAutoSirenOn";
+const char CMD_AUTOSIREN_OFF[]			= "VCmdAutoSirenOff";
+
+int DummyGroup = 22;
+
+object VcmdAutoSirenOn : CommandScript
+{
+	VcmdAutoSirenOn()
+	{
+		SetIcon("autosirenon");
+		SetCursor("sirens");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->RemoveCommand(CMD_AUTOSIREN_ON);
+		Caller->AssignCommand(CMD_AUTOSIREN_OFF);
+	}
+};
+
+object VcmdAutoSirenOff : CommandScript
+{
+	VcmdAutoSirenOff()
+	{
+		SetIcon("autosirenoff");
+		SetCursor("sirens");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->RemoveCommand(CMD_AUTOSIREN_OFF);
+		Caller->AssignCommand(CMD_AUTOSIREN_ON);
+	}
+};
+

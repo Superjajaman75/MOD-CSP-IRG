@@ -1,0 +1,61 @@
+//******************************************************************************************
+// #Version 1.3#
+//
+// 		Changes: - Shoot and Holsterweapon commands will be removed.
+//			   - DrawWeapon will be assigned.
+//			   - Sound will be played.
+//			   - Compatible with Armed Arrest mod
+//
+//******************************************************************************************
+
+const char CMD_SHOOTGUN[] 		= "Shoot";
+const char CMD_HOLSTERGUN[] 		= "HolsterWeapon";
+const char CMD_DRAWGUN[] 		= "DrawWeapon";
+const char CMD_ARREST[] 		= "Arrest";
+const char CMD_ARREST2[] 		= "PcmdArrest2";
+const char SND_HOLSTER[]		= "mod:Audio/FX/Misc/HolsterWeapon.wav";
+
+object HolsterWeapon : CommandScript
+{
+
+	HolsterWeapon()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetDoubleClickable(true);
+		SetGroupID(CGROUP_DRAW_WEAPON);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetDeselectCaller(false);
+		SetPriority(700);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return Caller->GetEquipment()==EQUIP_PISTOL;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		if(Caller->GetEquipment()==EQUIP_PISTOL)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionEquipWeapon(ACTION_NEWLIST, false);
+		Caller->RemoveCommand(CMD_SHOOTGUN);
+		Caller->RemoveCommand(CMD_HOLSTERGUN);
+		Caller->AssignCommand(CMD_DRAWGUN);
+		Caller->RemoveCommand(CMD_ARREST2);
+		Caller->AssignCommand(CMD_ARREST);
+
+		Vector Pos = Caller->GetPosition();
+		Audio::PlaySample3D(SND_HOLSTER, Pos);
+	}
+};

@@ -1,0 +1,60 @@
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char DUMMY_PATROL[] 				= "DummyPatrol";
+const char DUMMY_DISABLE[] 				= "DummyDisableSiren";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char DUMMY_HOSESON[] 				= "DummyHosesAreOn";
+
+int DummyGroup = 28;
+
+object StopFdOn : CommandScript
+{
+	StopFdOn()
+	{
+		SetIcon("standbyoff");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+
+ 		if (Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+
+ 		Vehicle v(Caller);
+		if (v.HasCommand(DUMMY_HOSESON) || v.IsInstalled())
+			return false;
+		if (v.IsCurrentAction("EActionCrossBridge") || v.IsCurrentAction("EActioninstall") || v.IsCurrentAction("EActionloadup") || v.IsCurrentAction("EActionUnload") || v.IsCurrentAction("EActionDropWithCrane") || !v.HasCommand("MoveTo"))
+			return false;
+ 
+ 		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+
+ 		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.PushActionWait(ACTION_NEWLIST, 0.1f);
+		if (v.HasObjectPath(NULL))
+			Game::ExecuteCommand(DUMMY_PATROL, &v, &v);
+		if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+			Game::ExecuteCommand(DUMMY_DISABLE, &v, &v);
+		if (v.IsBlueLightEnabled())
+			v.EnableBlueLights(false);
+			v.EnableHeadLights(false);
+	}
+};
+

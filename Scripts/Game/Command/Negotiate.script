@@ -1,0 +1,81 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Person with HolsterWeapon can't use this command.
+//
+//******************************************************************************************
+
+object Negotiate : CommandScript
+{
+	Negotiate()
+	{
+		SetValidTargets(ACTOR_PERSON | ACTOR_OPEN_HOUSE);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_NONIJURED_PERSON | CPE_USABLE_WM_OBJECTS);
+		SetSelfClickActivation(true);
+		SetPriority(650);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		Person p(Caller);
+		if(p.IsValid() && (p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.IsEquipped() || p.IsPulling() || p.GetFirehoseID()!=0 || p.GetEnteredCarID() != -1)) 
+			return false;
+
+		return Game::ExistsNonInjuredPerson() || Game::ExistsObjectWithFlagSet(OF_USABLE_WITH_MEGAPHONE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+			
+		GameObject obj(Target);		
+
+		if (Caller->GetType() == ACTOR_PERSON &&	obj.IsValid() &&
+			obj.GetType() == ACTOR_OPEN_HOUSE && obj.IsFlagSet(OF_USABLE_WITH_MEGAPHONE))
+		{
+			return true;
+		}
+		
+		if (obj.GetType() == ACTOR_PERSON )
+		{
+			Person pers(Target);
+			PersonRole role = pers.GetRole();
+			if (Caller->GetType()==ACTOR_PERSON && obj.IsValid() && !pers.IsInjured())
+			{
+				if (role==ROLE_GANGSTER)
+				{
+					return true;
+				}
+			   	if ((role==ROLE_CIVILIAN) && (pers.GetBehaviour()==BEHAVIOUR_CIVILIAN_PANIC))
+			   	{
+					return true;
+			   	}
+			}			
+			
+		}
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		GameObject obj(Target);		
+
+		if (Caller->GetType() == ACTOR_PERSON && obj.IsValid() &&
+			obj.GetType() == ACTOR_OPEN_HOUSE && obj.IsFlagSet(OF_USABLE_WITH_MEGAPHONE))
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_MEGAPHONE_DISTANCE);
+		}
+		else if (obj.GetType() == ACTOR_PERSON )
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_FOLLOW);
+		}
+
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionNegotiate(ACTION_APPEND, Target);
+	}
+};

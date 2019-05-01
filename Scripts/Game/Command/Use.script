@@ -1,0 +1,60 @@
+//******************************************************************************************
+// #Version 1.2#
+//
+// 		Changes: - Only bomb squad can defuse bombs.
+//
+//******************************************************************************************
+
+const char PROTO_EOD[] 				= "mod:Prototypes/Persons/Police/demineur.e4p";
+const char PROTO_TECH[] 			= "mod:Prototypes/Persons/DEPANNAGE/edf.e4p";
+const char NAME_BOMB01[]			= "bomb";
+const char NAME_BOMB02[]			= "m03_bomb";
+
+object Use : CommandScript
+{
+	Use()
+	{
+		SetValidTargets(ACTOR_OBJECT | ACTOR_HOUSE | ACTOR_OPEN_HOUSE);
+		SetRestrictions(RESTRICT_USABLE);
+		SetPriority(700);
+		SetSelfClickActivation(true);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return Game::ExistsObjectWithFlagSet(OF_USABLE);
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Caller->GetID()==Target->GetID())
+			return false;
+		
+		GameObject obj(Target);
+		Person p(Caller);
+		if (StrCompare(p.GetPrototypeFileName(), PROTO_EOD) == 0)
+		{
+			if (!obj.HasName(NAME_BOMB01) && !obj.HasName(NAME_BOMB02))
+				return false;
+		}
+		if (StrCompare(p.GetPrototypeFileName(), PROTO_TECH) == 0)
+		{
+			if (obj.HasName(NAME_BOMB01) || obj.HasName(NAME_BOMB02))
+				return false;
+		}
+
+		if (!obj.IsValid()) 
+			return false;
+		
+		return true;
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_USE);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionUse(ACTION_APPEND, Target);
+	}
+};

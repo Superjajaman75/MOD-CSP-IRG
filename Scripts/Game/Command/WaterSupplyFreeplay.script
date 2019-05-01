@@ -1,0 +1,513 @@
+//******************************************************************************************
+//	    Limited Water Supply script by Hoppah
+//		Version: 1.1
+//******************************************************************************************
+
+int MAX_WATER_TANKER 		= 10000;
+int MAX_WATER_CCFS 			= 5000;
+int MAX_WATER_TLF	 		= 1300;
+int MAX_WATER_LPF	 		= 400;
+int MAX_WATER_GTF	 		= 1000;
+int MAX_WATER_DLK	 		= 500;
+
+int OUTTAKE_HOSE 				= 8;	//outtake per second
+int OUTTAKE_TLF_CANNON 		= 20;
+int OUTTAKE_LPF_CANNON 		= 40;
+int OUTTAKE_DLK_CANNON 		= 20;
+int OUTTAKE_WATERCANNON		= 50;
+
+int INTAKE_SUPPLYLINE 			= 50;
+
+
+const char PROTO_WATER_TANKER[]		= "mod:Prototypes/Vehicles/Fire Department/ccgc.e4p";
+const char PROTO_CCFS[]				= "mod:Prototypes/Vehicles/Fire Department/CCFS1.e4p";
+
+object DummyUpdateWaterLevel : CommandScript
+{
+	int WaterLevel;
+	bool TankEmpty = false;
+
+ 	DummyUpdateWaterLevel() { SetGroupID(20);}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; }
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		GameObject obj(Caller);
+		Vehicle v(Target);
+		if (!v.IsValid() || v.IsSmoking() || v.IsDestroyed())
+		{
+			System::Log("WATER, Removed Water Supply Tank of: %s",v.GetPrototypeFileName());
+			obj.PushActionDeleteOwner(ACTION_NEWLIST);
+			return;
+		}
+
+		if (v.HasCommand("DummyUpdateWaterLevel"))
+		{
+			if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0)
+				WaterLevel = MAX_WATER_TANKER;
+			else if (StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) == 0)		
+				WaterLevel = MAX_WATER_CCFS;	
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) != 0)			
+				WaterLevel = MAX_WATER_GTF;
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_TLF)																
+				WaterLevel = MAX_WATER_TLF;
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_LPF)																
+				WaterLevel = MAX_WATER_LPF;
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK)																
+				WaterLevel = MAX_WATER_DLK;
+			else	
+				System::Error("WATER, Unknown vehicletype!");				
+			v.RemoveCommand("DummyUpdateWaterLevel");
+			System::Log("WATER, Assigned water tank level of %d to %s",WaterLevel,v.GetPrototypeFileName());
+		} else
+			WaterLevel = childID;
+		
+		
+		//Calcul en pourcentage	
+		int RelativeWaterLevel = 0;
+		if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_TANKER;
+		else if (StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) == 0)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_CCFS;
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_TLF)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_TLF;
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_LPF)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_LPF;
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) != 0)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_GTF;
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK)
+			RelativeWaterLevel = (WaterLevel*100)/MAX_WATER_DLK;
+		else
+			System::Error("WATER, Unknown vehicletype!");
+				
+		if (v.HasCommand("DummyCheckWaterSupply"))
+		{
+			v.RemoveCommand("DummyCheckWaterSupply");
+			char Text[255];
+			snprintf(Text, 255, "Le niveau d'eau : %d litres. (%d%%)", WaterLevel, RelativeWaterLevel);	
+			Game::ShowHelpTextWindow(Text, 2.f);
+		}
+		
+		if (((StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && WaterLevel < 20) || (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && WaterLevel < 101)) && !v.HasCommand("DummyEmptyTank"))
+			v.AssignCommand("DummyEmptyTank");
+		else if (v.HasCommand("DummyEmptyTank") && ((StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && WaterLevel > 20) || (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && WaterLevel > 101)))
+			v.RemoveCommand("DummyEmptyTank");
+		
+		bool PumpControllerPresent = false;	
+		int numActiveHoses = 0;
+		int numActiveTLFCannons = 0;
+		int numActiveLPFCannons = 0;
+		int numActiveDLKCannons = 0;
+		int numSupplyLines = 0;
+		int numWaterTankerLines = 0;
+		int Outtake = 0;
+		int Intake = 0;							
+		
+		//	CHECK IF PUMP CONTROLLER IS PRESET
+		if (v.HasCommand("VcmdPumpSwitch") && v.HasCommand("DummyPumpEnabled"))
+		{
+			GameObjectList l1 = v.GetObjectsInRange(500.0f, ACTOR_PERSON);
+			for(int j = 0; j < l1.GetNumObjects(); j++)
+			{
+				if (l1.GetObject(j)->GetType() == ACTOR_PERSON)
+				{								
+					Person p = l1.GetObject(j);
+					if (p.GetUserData() == v.GetID() && p.HasCommand("DummyPumpEnabled") && !p.IsCurrentAnimation("useextinguis") && !p.IsFlagSet(OF_HIDDEN))
+					{
+						p.SetUserData(0);
+						p.RemoveCommand("DummyPumpEnabled");
+					}
+					if (!PumpControllerPresent && p.GetUserData() == v.GetID() && p.HasCommand("DummyPumpEnabled") && p.IsCurrentAnimation("useextinguis") && !p.IsFlagSet(OF_HIDDEN))
+						PumpControllerPresent = true;
+				}
+			}
+		}
+		if (!PumpControllerPresent && v.HasCommand("DummyPumpEnabled"))
+		{
+			v.RemoveCommand("DummyPumpEnabled");
+			if (!v.IsCommandEnabled("MoveTo"))
+				v.EnableCommand("MoveTo", true);
+			if (!v.IsCommandEnabled("GoHome"))	
+				v.EnableCommand("GoHome", true);
+		}
+		
+		//	CHECK FIRE ENGINES
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && v.IsInstalled())
+		{
+			PersonList l2(ROLE_SQUAD);
+			for(int k = 0; k < l2.GetNumPersons(); k++)
+			{
+				if (l2.GetPerson(k)->GetEquipment() == EQUIP_FIREHOSE && l2.GetPerson(k)->GetType() == ACTOR_PERSON && l2.GetPerson(k)->GetFirehoseID() != 0 && !l2.GetPerson(k)->IsFlagSet(OF_HIDDEN))
+				{
+					GameObject Phydrant = l2.GetPerson(k)->GetHydrant();
+					if (Phydrant.GetID() == v.GetID() || ((Phydrant.HasName("extend_wye") || Phydrant.HasName("extend_hose")) && Phydrant.GetUserData() == v.GetID()))
+					{
+						Person p(l2.GetPerson(k));
+						if ((!PumpControllerPresent || v.HasCommand("DummyEmptyTank")) && (p.IsCommandEnabled("Extinguish") || p.IsCurrentAction("EActionExtinguish") || p.IsCurrentAction("EActionCool")))
+						{												
+							p.EnableCommand("Extinguish", false);
+							p.EnableCommand("Cool", false);
+							p.EnableAutoTarget(false);
+							if (p.IsCurrentAction("EActionExtinguish") || p.IsCurrentAction("EActionCool"))
+							{
+								p.ClearActions();
+								p.PushActionSwitchAnim(ACTION_NEWLIST, "idleequipped");
+								p.PushActionWait(ACTION_APPEND, 5.f);
+							}
+						}
+						else if (PumpControllerPresent && !v.HasCommand("DummyEmptyTank") && !p.IsCommandEnabled("Extinguish"))
+						{													
+							p.EnableCommand("Extinguish", true);
+							p.EnableCommand("Cool", true);
+							p.EnableAutoTarget(true);
+						}
+						if (p.IsCurrentAction("EActionExtinguish") || p.IsCurrentAction("EActionCool"))
+							numActiveHoses++;
+					}
+				}
+			}
+		}
+
+		//	CHECK FIRE ENGINES WITH DECK GUN
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && v.HasCommand("VcmdCannonSwitch") && v.IsCurrentAnimation("activate"))
+		{
+			GameObjectList l3 = Game::GetGameObjectsWithPrefix("engine_water_cannon");
+			for(int h = 0; h < l3.GetNumObjects(); h++)
+			{
+				Vehicle cannon = l3.GetObject(h);
+				if (cannon.GetUserData() == v.GetID())
+				{
+					if (v.HasCommand("DummyEmptyTank"))
+					{
+						cannon.EnableAutoTarget(false);
+						cannon.ClearActions();
+						cannon.PushActionWait(ACTION_NEWLIST, 4.f);
+					} 
+					else if (!v.HasCommand("DummyEmptyTank"))
+						cannon.EnableAutoTarget(true);
+					if (cannon.IsCurrentAction("EActionExtinguish") || cannon.IsCurrentAction("EActionCool"))
+						numActiveTLFCannons++;
+				}
+			}
+		}
+		
+		//	CHECK TLF AND LPF VEHICLETYPES
+		if ((v.GetVehicleType() == VT_FIREFIGHTERS_TLF || v.GetVehicleType() == VT_FIREFIGHTERS_LPF))
+		{
+			if (v.HasCommand("DummyEmptyTank") && v.IsCommandEnabled("Extinguish"))
+			{
+				v.EnableCommand("Extinguish", false);
+				v.EnableCommand("Cool", false);
+				v.EnableAutoTarget(false);
+				v.ClearActions();
+				v.PushActionWait(ACTION_NEWLIST, 4.f);
+			}
+			else if (!v.HasCommand("DummyEmptyTank") && !v.IsCommandEnabled("Extinguish"))
+			{
+				v.EnableCommand("Extinguish", true);
+				v.EnableCommand("Cool", true);
+				v.EnableAutoTarget(true);
+			}								
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_TLF && (v.IsCurrentAction("EActionExtinguish") || v.IsCurrentAction("EActionCool")))
+				numActiveTLFCannons++;									
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_LPF && (v.IsCurrentAction("EActionExtinguish") || v.IsCurrentAction("EActionCool")))
+				numActiveLPFCannons++;									
+		}
+
+		//	CHECK IF VEHICLE HAS SUPPLY LINE CONNECTED	
+		if (v.HasCommand("DummyWaterSupplyOn"))
+			numSupplyLines++;
+			
+		//	CHECK IF WATER TANKER HAS A SUPPLY LINE CONNECTED TO A FIRE ENGINE
+		if (v.HasCommand("DummyWaterSupplyFromTankerOn") && StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && v.GetVehicleType() == VT_FIREFIGHTERS_GTF && v.IsInstalled())
+		{
+			PersonList l4(ROLE_SQUAD);
+			for(int y = 0; y < l4.GetNumPersons(); y++)
+			{
+				if (l4.GetPerson(y)->GetEquipment() == EQUIP_FIREHOSE && l4.GetPerson(y)->GetFirehoseID() != 0 && l4.GetPerson(y)->IsFlagSet(OF_HIDDEN) && l4.GetPerson(y)->HasCommand("DummyWaterSupplyFromTankerOn"))
+				{
+					GameObject Phydrant = l4.GetPerson(y)->GetHydrant();
+					if (Phydrant.GetID() == v.GetID())
+					{
+						Person p(l4.GetPerson(y));
+						GameObjectList l5 = p.GetObjectsInRange(800.0f, ACTOR_VEHICLE);
+						for(int z = 0; z < l5.GetNumObjects(); z++)
+						{
+							if (l5.GetObject(z)->GetType() == ACTOR_VEHICLE)
+							{
+								Vehicle m = l5.GetObject(z);
+								if (p.GetUserData() == m.GetID())
+								{
+									if (!v.HasCommand("DummyEmptyTank") && !m.HasCommand("DummyWater100Perc"))
+										numWaterTankerLines++;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		//	CHECK FIRE ENGINES FOR A SUPPLY LINE FROM WATER TANKER
+		if (v.HasCommand("DummyWaterSupplyFromTankerOn") && StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0)
+		{
+			GameObjectList l6 = v.GetObjectsInRange(800.0f, ACTOR_PERSON);
+			for(int d = 0; d < l6.GetNumObjects(); d++)
+			{
+				Person n = l6.GetObject(d);
+				if (n.GetUserData() == v.GetID() && n.HasCommand("DummyWaterSupplyFromTankerOn"))
+				{
+					GameObject Phydrant = n.GetHydrant();
+					if (StrCompare(Phydrant.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0)
+					{
+						Vehicle hy(&Phydrant);
+						if (!hy.HasCommand("DummyEmptyTank") && !v.HasCommand("DummyWater100Perc"))
+							numSupplyLines++;
+					}
+				}
+			}
+		}
+		
+		//	CHECK LADDER VEHICLES
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && v.IsInstalled() && v.IsUplifted() && !v.IsBasketEmpty())
+		{
+			PersonList l7(ROLE_SQUAD);
+			for(int b = 0; b < l7.GetNumPersons(); b++)
+			{
+				if (l7.GetPerson(b)->CanUseDLKCannon() && l7.GetPerson(b)->GetEnteredCarID() == v.GetID())		
+				{
+					Person p(l7.GetPerson(b));
+					if (v.HasCommand("DummyEmptyTank") && p.IsCommandEnabled("Extinguish"))
+					{
+						if (p.IsCommandEnabled("Extinguish"))
+						{
+							p.EnableCommand("Extinguish", false);
+							p.EnableCommand("Cool", false);
+							p.EnableAutoTarget(false);
+							p.ClearActions();
+							p.PushActionWait(ACTION_NEWLIST, 4.f);
+						} 
+					}
+					else if (!v.HasCommand("DummyEmptyTank") && !p.IsCommandEnabled("Extinguish"))
+					{
+						p.EnableCommand("Extinguish", true);
+						p.EnableCommand("Cool", true);
+						p.EnableAutoTarget(true);
+					}
+				}
+			}
+			if (v.IsCannonInUse())
+				numActiveDLKCannons++;							
+		}
+		
+		//	RECALCULATE IN- AND OUTTAKES
+		Intake = numSupplyLines*INTAKE_SUPPLYLINE;
+		Outtake = numActiveHoses*OUTTAKE_HOSE+numActiveTLFCannons*OUTTAKE_TLF_CANNON+numActiveLPFCannons*OUTTAKE_LPF_CANNON+numActiveDLKCannons*OUTTAKE_DLK_CANNON+numWaterTankerLines*OUTTAKE_WATERCANNON;
+		
+		//	CHANGE WATER LEVEL
+		if (obj.GetUserData() == v.GetID())
+		{
+			WaterLevel = WaterLevel+Intake-Outtake;
+			if ((StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && WaterLevel < 20) || (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && WaterLevel < 101))
+				v.AssignCommand("DummyEmptyTank");
+			else if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && WaterLevel > MAX_WATER_TANKER)
+				WaterLevel = MAX_WATER_TANKER;				
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_TLF && WaterLevel > MAX_WATER_TLF)
+				WaterLevel = MAX_WATER_TLF;
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_LPF && WaterLevel > MAX_WATER_LPF)
+				WaterLevel = MAX_WATER_LPF;
+			else if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) != 0 && v.GetVehicleType() == VT_FIREFIGHTERS_GTF && WaterLevel > MAX_WATER_GTF)
+				WaterLevel = MAX_WATER_GTF;
+			else if (StrCompare(v.GetPrototypeFileName(), PROTO_CCFS) == 0  && WaterLevel > MAX_WATER_CCFS)
+				WaterLevel = MAX_WATER_CCFS;
+			else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && WaterLevel > MAX_WATER_DLK)
+				WaterLevel = MAX_WATER_DLK;
+			if (WaterLevel < 0)
+				WaterLevel = 0;
+			if (v.HasCommand("DummyEmptyTank"))
+			{
+				if (!TankEmpty)
+				{
+					TankEmpty = true;
+					if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0)
+						Game::ShowHelpTextWindow("Citerne vide !!", 2.f);					
+					else
+						Game::ShowHelpTextWindow("Citerne vide !!", 2.f);
+					System::Log("WATER, Tank of %s empty!", v.GetPrototypeFileName());
+				}
+				if ((StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && WaterLevel > 20) || (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && WaterLevel > 101))
+				{
+					v.RemoveCommand("DummyEmptyTank");
+					if (v.HasCommand("Extinguish") && !v.IsCommandEnabled("Extinguish"))
+						v.EnableCommand("Extinguish", true);
+					if (v.HasCommand("Cool") && !v.IsCommandEnabled("Cool"))
+						v.EnableCommand("Cool", true);
+					if (TankEmpty)
+						TankEmpty = false;
+				}
+			}
+		} else
+			System::Error("WATER, Unknown water tank Dummyobject!");
+
+		//	CHANGE ICONS	
+		if (RelativeWaterLevel >= 90)		
+		{
+			if (!v.HasCommand("DummyWater100Perc"))		v.AssignCommand("DummyWater100Perc");
+			if (v.HasCommand("DummyWater80Perc"))		v.RemoveCommand("DummyWater80Perc");
+			if (v.HasCommand("DummyWater60Perc"))		v.RemoveCommand("DummyWater60Perc");
+			if (v.HasCommand("DummyWater40Perc"))		v.RemoveCommand("DummyWater40Perc");
+			if (v.HasCommand("DummyWater20Perc"))		v.RemoveCommand("DummyWater20Perc");			
+		}			
+		else if (WaterLevel <= 0 || (WaterLevel > 0 && WaterLevel < 20) || RelativeWaterLevel >= 80)		
+		{	
+			if (v.HasCommand("DummyWater100Perc"))		v.RemoveCommand("DummyWater100Perc");		
+			if (v.HasCommand("DummyWater80Perc"))		v.RemoveCommand("DummyWater80Perc");
+			if (v.HasCommand("DummyWater60Perc"))		v.RemoveCommand("DummyWater60Perc");
+			if (v.HasCommand("DummyWater40Perc"))		v.RemoveCommand("DummyWater40Perc");
+			if (v.HasCommand("DummyWater20Perc"))		v.RemoveCommand("DummyWater20Perc");
+		}
+		else if (RelativeWaterLevel >= 60)
+		{			
+			if (v.HasCommand("DummyWater100Perc"))		v.RemoveCommand("DummyWater100Perc");
+			if (!v.HasCommand("DummyWater80Perc"))		v.AssignCommand("DummyWater80Perc");
+			if (v.HasCommand("DummyWater60Perc"))		v.RemoveCommand("DummyWater60Perc");
+			if (v.HasCommand("DummyWater40Perc"))		v.RemoveCommand("DummyWater40Perc");
+			if (v.HasCommand("DummyWater20Perc"))		v.RemoveCommand("DummyWater20Perc");
+		}
+		else if (RelativeWaterLevel >= 40)
+		{			
+			if (v.HasCommand("DummyWater100Perc"))		v.RemoveCommand("DummyWater100Perc");
+			if (v.HasCommand("DummyWater80Perc"))		v.RemoveCommand("DummyWater80Perc");
+			if (!v.HasCommand("DummyWater60Perc"))		v.AssignCommand("DummyWater60Perc");
+			if (v.HasCommand("DummyWater40Perc"))		v.RemoveCommand("DummyWater40Perc");
+			if (v.HasCommand("DummyWater20Perc"))		v.RemoveCommand("DummyWater20Perc");
+		}
+		else if (RelativeWaterLevel >= 20)
+		{
+			if (v.HasCommand("DummyWater100Perc"))		v.RemoveCommand("DummyWater100Perc");
+			if (v.HasCommand("DummyWater80Perc"))		v.RemoveCommand("DummyWater80Perc");
+			if (v.HasCommand("DummyWater60Perc"))		v.RemoveCommand("DummyWater60Perc");
+			if (!v.HasCommand("DummyWater40Perc"))		v.AssignCommand("DummyWater40Perc");
+			if (v.HasCommand("DummyWater20Perc"))		v.RemoveCommand("DummyWater20Perc");
+		}
+		else if (WaterLevel > 0)
+		{
+			if (v.HasCommand("DummyWater100Perc"))		v.RemoveCommand("DummyWater100Perc");
+			if (v.HasCommand("DummyWater80Perc"))		v.RemoveCommand("DummyWater80Perc");
+			if (v.HasCommand("DummyWater60Perc"))		v.RemoveCommand("DummyWater60Perc");
+			if (v.HasCommand("DummyWater40Perc"))		v.RemoveCommand("DummyWater40Perc");
+			if (!v.HasCommand("DummyWater20Perc"))		v.AssignCommand("DummyWater20Perc");
+		}
+		
+		// REPEAT COMMAND
+		childID = WaterLevel;
+		obj.PushActionWait(ACTION_NEWLIST, 1.0f);
+		obj.PushActionExecuteCommand(ACTION_APPEND, "DummyUpdateWaterLevel", &v, childID, false);
+		//System::Log("WATER, Water level of %s: %d",v.GetPrototypeFileName(),childID);
+ 	}	
+};
+
+object DummyCheckWaterSupply : CommandScript
+{
+ 	DummyCheckWaterSupply()
+ 	{
+ 		SetGroupID(20);
+ 	}
+  
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		VehicleList fflist(VT_FIREFIGHTERS_ASF, VT_FIREFIGHTERS_GTF);
+		for(int i = 0; i < fflist.GetNumVehicles(); i++)
+		{	
+			if (!fflist.GetVehicle(i)->HasCommand("VcmdWaterSupply") && 
+			fflist.GetVehicle(i)->IsValid() && !fflist.GetVehicle(i)->IsSmoking() && 
+			!fflist.GetVehicle(i)->IsDestroyed() && fflist.GetVehicle(i)->HasCommand("MoveTo") && 
+			(fflist.GetVehicle(i)->GetVehicleType() == VT_FIREFIGHTERS_GTF || fflist.GetVehicle(i)->GetVehicleType() == VT_FIREFIGHTERS_TLF || fflist.GetVehicle(i)->GetVehicleType() == VT_FIREFIGHTERS_LPF || fflist.GetVehicle(i)->GetVehicleType() == VT_FIREFIGHTERS_DLK))
+			{
+				Vehicle v(fflist.GetVehicle(i));
+				v.AssignCommand("VcmdWaterSupply");
+				v.AssignCommand("DummyUpdateWaterLevel");
+				GameObject mDummy = Game::CreateObject("mod:Prototypes/Objects/Misc/empty.e4p", "WaterTankDummy");
+				mDummy.Hide();
+				mDummy.SetUserData(v.GetID());
+				mDummy.PushActionExecuteCommand(ACTION_NEWLIST, "DummyUpdateWaterLevel", &v, 0, false);
+			}
+		}
+		GameObject obj(Caller);
+		obj.PushActionWait(ACTION_NEWLIST, 2.0f);
+		obj.PushActionExecuteCommand(ACTION_APPEND, "DummyCheckWaterSupply", Caller, childID, false);
+ 	}	
+};
+
+object VcmdWaterSupply : CommandScript
+{
+ 	VcmdWaterSupply()
+ 	{
+		SetIcon("water100");
+		SetCursor("cool");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+  
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+		if (Caller->HasCommand("DummyEmptyTank"))	
+			SetIcon("water0");
+		else if (Caller->HasCommand("DummyWater20Perc"))
+			SetIcon("water20");
+		else if (Caller->HasCommand("DummyWater40Perc"))
+			SetIcon("water40");
+		else if (Caller->HasCommand("DummyWater60Perc"))
+			SetIcon("water60");
+		else if (Caller->HasCommand("DummyWater80Perc"))
+			SetIcon("water80");
+		else
+			SetIcon("water100");
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		Caller->AssignCommand("DummyCheckWaterSupply");
+	}
+};
+
+
+object DummyWater100Perc : CommandScript {
+ 	DummyWater100Perc() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};
+object DummyWater80Perc : CommandScript {
+ 	DummyWater80Perc() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};
+object DummyWater60Perc : CommandScript {
+ 	DummyWater60Perc() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};
+object DummyWater40Perc : CommandScript {
+ 	DummyWater40Perc() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};
+object DummyWater20Perc : CommandScript {
+ 	DummyWater20Perc() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};
+object DummyEmptyTank : CommandScript {
+ 	DummyEmptyTank() { SetGroupID(20); }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)	{ return true; } 
+	void PushActions(GameObject *Caller, Actor *Target, int childID) {}	
+};

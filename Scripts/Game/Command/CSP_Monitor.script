@@ -1,0 +1,144 @@
+const char ICON[] 				= "monitor";
+const char PROTO_Monitor[] 		= "mod:Prototypes/Vehicles/Sonstiges/Monitor.e4p";
+const char CMD_Monitor[] 		= "Monitor";
+const char CMD_WATER_ON[]		= "VcmdWaterOn";
+const char CMD_WATER_OFF[]		= "VcmdWaterOff";
+
+object Monitor: CommandScript
+{
+	Monitor()
+	{
+		SetIcon(ICON);
+		SetCursor(ICON);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_PERSON);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		Person p(Caller);
+		if (p.GetEquipment() == EQUIP_FIREHOSE && p.GetFirehoseID() != 0 && p.IsValid())
+			return true;
+
+		if(!p.IsEquipped() && p.IsValid())
+			return true;
+		
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		if(p.IsEquipped())
+		{
+			if (Caller->GetID() == Target->GetID())
+				return true;
+		}
+
+		if(!p.IsEquipped())
+		{
+			Vehicle v(Target);
+			if(StrCompare(v.GetPrototypeFileName(), PROTO_Monitor) == 0 && !v.IsInstalled() && v.IsValid())
+				return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		if (childID == 0)
+		{
+			if(p.IsEquipped())
+			{
+				p.PushActionSwitchAnim(ACTION_NEWLIST, "kneeldown");
+				p.PushActionWait(ACTION_APPEND, 3.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, CMD_Monitor, Target, 1, false);
+				p.PushActionSwitchAnim(ACTION_APPEND, "none");
+			}
+			if(!p.IsEquipped())
+			{
+				p.PushActionMove(ACTION_NEWLIST, Target, TARGET_ANY);
+				p.PushActionTurnTo(ACTION_APPEND, Target);
+				p.PushActionSwitchAnim(ACTION_APPEND, "kneeldown");
+				p.PushActionWait(ACTION_APPEND, 3.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, CMD_Monitor, Target, 2, false);
+			}
+		}
+		
+		if (childID == 1)
+		{
+			Vector Pos = p.GetPosition();
+			p.SetFlag(OF_HIDDEN);
+			p.EnableAutoTarget(false);
+			p.SetPlacement(PLACEMENT_NONE);
+			p.SetPosition(Pos + Vector(0.f,0.f,-45.f));
+
+			Vehicle Monitor = Game::CreateVehicle(PROTO_Monitor, "Unnamed");
+			float r[9];
+			p.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			float vx = -5.f, vy = -20.f, vz = 0.f;
+			Math::RotateVector(vx, vy, vz, r);
+			Monitor.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			Monitor.SetPosition(Pos + Vector(vx, vy, vz));
+			Monitor.SetSelectable(true);
+			if (Game::IsMultiplayer())
+				Monitor.SetPlayerMP(p.GetPlayerMP());
+
+			int MonitorID = Monitor.GetID();
+			p.SetUserData(MonitorID);
+
+			Person pNew = Game::CreatePerson(p.GetPrototypeFileName(), p.GetName());
+			if(Game::FindFreePosition(&pNew, Pos))
+			{	
+				pNew.SetPosition(Pos);
+				pNew.SetRotation(Caller);
+				if(p.IsSelected())
+					pNew.Select();
+				p.Deselect();
+				p.SetSelectable(true);
+				pNew.PushActionSwitchAnim(ACTION_APPEND, "standup");
+				pNew.PushActionWait(ACTION_APPEND, 3.f);
+				pNew.PushActionSwitchAnim(ACTION_APPEND, "idle");
+				if (Game::IsMultiplayer())
+					pNew.SetPlayerMP(p.GetPlayerMP());
+			}
+		}
+
+		if(childID == 2)
+		{
+			Vehicle v(Target);
+			if(v.HasCommand(CMD_WATER_OFF))
+			{
+				int MonitorID = v.GetID();
+				PersonList l = PersonList(ROLE_SQUAD);
+				for(int i=0; i<l.GetNumPersons(); i++)
+				{
+					if(l.GetPerson(i)->GetUserData() == MonitorID)
+					{
+						Vector Pos = l.GetPerson(i)->GetPosition();
+						v.PushActionWait(ACTION_NEWLIST, 0.5f);
+						v.ClearActions();
+						l.GetPerson(i)->SetPlacement(PLACEMENT_CUSTOM_PLACEMENT);
+						l.GetPerson(i)->SetPosition(Pos + Vector(0.f,0.f,0.f));
+						l.GetPerson(i)->ClearFlag(OF_HIDDEN);
+						l.GetPerson(i)->EnableAutoTarget(true);
+						l.GetPerson(i)->SetSelectable(true);
+						if(p.IsSelected())
+							l.GetPerson(i)->Select();
+						p.PushActionDeleteOwner(ACTION_APPEND);
+						v.PushActionDeleteOwner(ACTION_APPEND);
+						l.GetPerson(i)->PushActionSwitchAnim(ACTION_APPEND, "standup");
+						l.GetPerson(i)->PushActionWait(ACTION_APPEND, 3.f);
+						l.GetPerson(i)->PushActionSwitchAnim(ACTION_APPEND, "idle");
+					}
+				}
+			} else
+			{
+				Game::ShowHelpTextWindow("Lance active!", 2.f);
+				Mission::PlayHint("Lance active!");
+			}
+		}
+	}
+};

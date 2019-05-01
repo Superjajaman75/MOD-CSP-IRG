@@ -1,0 +1,208 @@
+const bool affich = true;
+
+object Positionnement : CommandScript
+{
+	Positionnement()
+	{
+		SetValidTargets(ACTOR_FLOOR | ACTOR_STREET);
+		SetPossibleCallers(ACTOR_VEHICLE);
+		SetIcon("positionnement");
+		SetCursor("SendTo");
+		SetPriority(0);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (!affich)
+			return false;
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		if(Caller->IsInstalled())
+			return false;
+
+		return true;
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!affich)
+			return false;
+		if(Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			return (v.GetNumPassengers() > 0 && !v.IsInstalled());
+		}
+		//return true;
+		return Target->GetType()==ACTOR_FLOOR||Target->GetType()==ACTOR_STREET;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID) 
+	{ 
+		if (!affich)
+			return false;
+		return true; 
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vector TargetPos = Game::GetCommandPos();
+		Vehicle v(Caller);
+		int id = v.GetID();
+		System::Log("[POS] L'ID est %i", id);
+		char objName[50];
+		snprintf(objName, 50, "obj_%i", id);
+
+		
+		VehicleList allMaker(objName);
+		if(allMaker.GetNumVehicles() == 0)
+		{
+			GameObject obj;
+			if (!(Game::IsMultiplayer())) {
+				char proto[] = "mod:Prototypes/Vehicles/Fire Department/pos_maker.e4p";	
+			} else if (Game::IsMultiplayer() && v.GetPlayerMP() == 0 ) {
+				char proto[] = "mod:Prototypes/Vehicles/Fire Department/pos_maker.e4p";	
+			} else if (Game::IsMultiplayer() && v.GetPlayerMP() == 1) {
+				char proto[] = "mod:Prototypes/Vehicles/Fire Department/pos_maker_green.e4p";	
+			} else if (Game::IsMultiplayer() && v.GetPlayerMP() == 2) {
+				char proto[] = "mod:Prototypes/Vehicles/Fire Department/pos_maker_red.e4p";	
+			} else if (Game::IsMultiplayer() && v.GetPlayerMP() == 3) {
+				char proto[] = "mod:Prototypes/Vehicles/Fire Department/pos_maker_yellow.e4p";
+			} else {
+				System::Log("[POS] Joueur introuvable");
+				char proto[] = "error"
+				return;
+			}
+			
+			if (StrCompare(proto, "error") != 0) {
+				obj = Game::CreateVehicle(proto, objName);
+				obj.DisablePhysics();
+				obj.DisablePhysicsSimulation();
+				obj.DisableCollisionResponse();
+				obj.SetCollisionMode(32);
+				obj.SetPosition(TargetPos);
+				obj.SetPlayerMP(v.GetPlayerMP());
+				obj.AssignCommand("TurnTo");
+				obj.AssignCommand("Rotation_Droite");
+				obj.AssignCommand("Rotation_Gauche");
+				obj.AssignCommand("objHalt");
+				obj.AssignCommand("objGo");
+				
+				obj.SetUserData(id);
+				v.Deselect();
+				obj.Select();
+			} else {
+				System::Log("[POS] Erreur");
+				return;
+			}
+		} else {
+			Game::ShowHelpTextWindow("Un marqueur est deja place", 5.f);
+		}
+	}
+};
+
+
+object TurnTo : CommandScript
+{
+	TurnTo()
+	{
+		SetIcon("Install");
+		SetCursor("rotate_ccw");
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return Target->GetType()==ACTOR_FLOOR||Target->GetType()==ACTOR_STREET;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vector pos=Game::GetCommandPos();
+		Caller->PushActionTurnTo(ACTION_NEWLIST, pos, 0.0f);
+	}	
+
+};
+
+
+object objHalt : CommandScript
+{
+	objHalt()
+	{
+		SetIcon("stop");	
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int linie)
+	{
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle obj(Caller);
+		Vehicle v(&Game::GetActor(obj.GetUserData()));
+		obj.PushActionDeleteOwner(ACTION_NEWLIST);
+		v.SetCommandable(true);
+		v.Select();
+		v.PushActionWait(ACTION_NEWLIST, 0.1f);
+	}
+};
+
+
+object objGo : CommandScript
+{
+	objGo()
+	{
+		SetIcon("positionnement");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int linie)
+	{
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle obj(Caller);
+		Vehicle v(&Game::GetActor(obj.GetUserData()));
+		if(v.GetNumPassengers() == 0)
+		{
+			Game::ShowHelpTextWindow("Le vehicule est vide", 5.f);
+			return;
+		}
+		v.SetCommandable(false);
+		v.PushActionMove(ACTION_NEWLIST, obj.GetPosition());
+		v.PushActionExecuteCommand(ACTION_APPEND, "placement", &obj, 0, false);
+	}
+};
+
+
+object placement : CommandScript
+{
+	placement()
+	{
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		Vehicle obj(Target);
+		v.SetCommandable(true);
+
+		float r[9];
+		float childr[9];
+		obj.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+		Math::EulerToMatrix(0.f, 0.f, 0.f, childr);
+		Math::MultiplyMatrices(childr, r);
+		v.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+		
+		v.SetPosition(obj.GetPosition());
+		obj.PushActionDeleteOwner(ACTION_NEWLIST);
+	}
+};

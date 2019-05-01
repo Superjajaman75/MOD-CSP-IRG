@@ -1,0 +1,352 @@
+//******************************************************************************************
+//	    Water cannon and pump script for the New York City mod by MikeyPI and Hoppah
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//******************************************************************************************
+
+object VcmdCannonSwitch : CommandScript
+{
+	VcmdCannonSwitch()
+	{
+		SetIcon("wateroff");
+		SetCursor("wateroff");
+ 		SetGroupLeader(true);
+ 		SetGroupID(31);
+		//SetPossibleCallers(ACTOR_VEHICLE);		
+		//SetValidTargets(ACTOR_VEHICLE);
+		//SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;		
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (!v.HasChild("controller"))
+				return false;
+			if (!v.HasCommand("Extinguish") && !v.HasCommand("Cool") && v.GetNumPassengers() == 0)
+				return false;
+			if (!v.HasCommand("Extinguish") && !v.HasCommand("Cool") && v.HasCommand("DummyEmptyTank"))
+				return false;			
+			if (v.HasCommand("Extinguish") && v.HasCommand("Cool"))
+			{
+				SetIcon("wateroff");
+				SetCursor("wateroff");
+				SetPriority(65);
+			} else
+			{
+				SetIcon("wateron");
+				SetCursor("wateron");
+			}
+		}
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false; 
+ 		if (Caller->GetType() == ACTOR_VEHICLE && !Caller->HasCommand("DummyEmptyTank"))
+ 			return true; 
+ 		return true;
+ 	}	
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		if (!v.HasCommand("Extinguish") && !v.HasCommand("Cool") && !v.IsCurrentAnimation("activate"))
+		{
+			v.AssignCommand("Extinguish");
+			v.AssignCommand("Cool");
+			v.SetChildEnabled("cannon", false);
+			v.SetAnimation("activate");
+				float r[9];
+			v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			Vector PosChild = v.GetChildPosition("controller");
+			PersonList l = v.GetPassengers();
+			Person p = l.GetPerson(0);
+			v.RemovePassenger(&p);
+			if (p.IsEquipped())		p.SetEquipment(EQUIP_NONE);
+			p.AssignCommand("VcmdCannonSwitch");
+			p.SetUserData(v.GetID());
+			p.SetCommandable(false);
+			p.SetSelectable(false);
+			p.SetPlacement(PLACEMENT_NONE);
+			p.SetPosition(PosChild);
+			p.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			Vector Pos = v.GetPosition();			
+			p.PushActionRotateTarget(ACTION_NEWLIST, &p, 0, 180, 0, 0.01f);
+			p.PushActionSwitchAnim(ACTION_APPEND, "idleheavyobj");			
+			Vehicle cannon01 = Game::CreateVehicle("mod:Prototypes/Vehicles/06 Objects/engine01_cannon.e4p", "engine_water_cannon");
+			cannon01.SetPlacement(PLACEMENT_NONE);
+			cannon01.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			cannon01.SetPosition(Pos);
+			cannon01.UpdatePlacement();
+			cannon01.SetPlayerMP(v.GetPlayerMP());
+			cannon01.SetCommandable(false);
+			cannon01.SetUserData(v.GetID());
+			cannon01.EnableAutoTarget(true);
+		} 
+		else if (v.IsCurrentAnimation("activate"))
+		{
+			if (!v.IsSmoking() && !v.IsDestroyed() && v.IsValid())
+			{
+				v.RemoveCommand("Extinguish");
+				v.RemoveCommand("Cool");
+			}
+			v.SetChildEnabled("cannon", true);
+			v.SetAnimation("deactivate");
+			int UnitID = v.GetID();	
+			PersonList l1(ROLE_SQUAD);
+			for(int i = 0; i < l1.GetNumPersons(); i++)
+			{
+				if (l1.GetPerson(i)->GetUserData() == UnitID && l1.GetPerson(i)->HasCommand("VcmdCannonSwitch"))
+				{
+					Person p = l1.GetPerson(i);
+					p.SetPlacement(PLACEMENT_CUSTOM_PLACEMENT);
+					p.RemoveCommand("VcmdCannonSwitch");
+					p.SetCommandable(true);
+					p.SetSelectable(true);
+					p.SetUserData(0);
+					if (!p.IsInjured() && !p.IsDead())
+						p.PushActionSwitchAnim(ACTION_APPEND, "idle");
+					if (p.IsInjured() || p.IsDead() || v.GetFreePassengers() == 0 || v.IsSmoking() || v.IsDestroyed() || !v.IsValid())
+					{
+						Vector pos = v.GetPosition();
+						Game::FindFreePosition(&p, pos, 250.f);
+						p.SetPosition(pos);
+					} else
+					 v.AddPassenger(&p);
+				}
+			}
+			GameObjectList l2 = Game::GetGameObjectsWithPrefix("engine_water_cannon");
+			for(int i = 0; i < l2.GetNumObjects(); i++)
+			{
+				GameObject *obj = l2.GetObject(i);
+				if (obj->GetUserData() == UnitID)
+				{
+					obj->ClearActions();
+					obj->PushActionDeleteOwner(ACTION_NEWLIST);
+				}
+			}
+		}
+	}
+};
+
+object VcmdPumpSwitch : CommandScript
+{
+	VcmdPumpSwitch()
+	{
+		SetIcon("pompe");
+ 		SetGroupLeader(true);
+ 		SetGroupID(32);
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;		
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (!v.HasChild("pump_controller") || (!v.HasCommand("DummyPumpEnabled") && v.GetNumPassengers() == 0))
+				return false;				
+		}	
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false; 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (!v.HasChild("pump_controller") || (!v.HasCommand("DummyPumpEnabled") && v.GetNumPassengers() == 0))
+				return false;				
+		}		
+ 		return true;
+ 	}	
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 0)
+		{
+			Vehicle v(Caller);
+			if (!v.HasCommand("DummyPumpEnabled"))
+			{
+				v.PushActionWait(ACTION_NEWLIST, 0.1f);
+					float r[9];
+				v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				Vector PosChild = v.GetChildPosition("pump_controller");
+				int NumPass = 0;
+				PersonList l1 = v.GetPassengers();
+				for(int i = 0; i < l1.GetNumPersons(); i++)
+				{
+					if (NumPass == 0 && l1.GetPerson(i)->HasCommand("AttachFireHose"))
+					{
+						Person p = l1.GetPerson(i);
+						if (p.IsEquipped())		
+							p.SetEquipment(EQUIP_NONE);
+						p.PushActionLeaveCar(ACTION_NEWLIST, &v);
+						p.PushActionMove(ACTION_APPEND, PosChild);
+						p.PushActionTurnTo(ACTION_APPEND, &v);
+						p.PushActionExecuteCommand(ACTION_APPEND, "VcmdPumpSwitch", &v, 1, false);
+						NumPass++;
+					}
+				}				
+			} else
+			{
+				GameObjectList l1 = v.GetObjectsInRange(500.0f, ACTOR_PERSON);
+				for(int i = 0; i < l1.GetNumObjects(); i++)
+				{
+					Person p = l1.GetObject(i);
+					if (p.GetUserData() == v.GetID() && p.HasCommand("DummyPumpEnabled"))
+					{				
+						p.RemoveCommand("DummyPumpEnabled");
+						p.SetUserData(0);
+						if (p.IsCurrentAnimation("useextinguis"))
+							p.PushActionExecuteCommand(ACTION_NEWLIST, "EnterCar", &v, childID, false);
+					}
+				}
+				Audio::PlaySample3D("mod:Audio/FX/misc/Lighton01.wav", v.GetPosition());
+				v.RemoveCommand("DummyPumpEnabled");
+				if (!v.IsCommandEnabled("MoveTo"))
+					v.EnableCommand("MoveTo", true);
+				if (!v.IsCommandEnabled("GoHome"))	
+					v.EnableCommand("GoHome", true);				
+			}
+		}
+		if (childID == 1)
+		{
+			Person p(Caller);
+			Vehicle v(Target);
+			p.AssignCommand("DummyPumpEnabled");
+			p.SetUserData(v.GetID());	
+			p.PushActionSwitchAnim(ACTION_NEWLIST, "useextinguis");			
+			Audio::PlaySample3D("mod:Audio/FX/misc/pump_on.wav", v.GetPosition());
+			v.AssignCommand("DummyPumpEnabled");			
+			v.EnableCommand("MoveTo", false);
+			v.EnableCommand("GoHome", false);		
+			//p.SetCommandable(false);
+			//p.SetSelectable(false);				
+		}			
+	}
+};
+
+object PcmdPumpSwitch : CommandScript
+{
+	PcmdPumpSwitch()
+	{
+		SetIcon("pompe");
+		SetGroupLeader(true);
+ 		SetGroupID(32);
+		SetValidTargets(ACTOR_VEHICLE);
+		SetPossibleCallers(ACTOR_PERSON);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;		
+		if (Caller->GetType() == ACTOR_PERSON)
+		{
+			Person p(Caller);
+			if (p.IsEquipped() || p.IsInDLKBasket() || p.GetEnteredCarID() != -1 || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.IsContaminated() || p.IsPulling() || p.GetEnteredHouseID() != -1 || p.IsInjured() || p.IsDead())
+				return false;
+		}	
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Caller->GetID() == Target->GetID())
+ 			return false; 
+		if (Caller->GetType() == ACTOR_PERSON)
+		{
+			SetPriority(0);
+			Vehicle v(Target);
+			Person p(Caller);
+			if (p.IsEquipped() || p.IsInDLKBasket() || p.GetEnteredCarID() != -1 || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.IsContaminated() || p.IsPulling() || p.GetEnteredHouseID() != -1 || p.IsInjured() || p.IsDead())
+				return false;
+			if (v.HasCommand("DummyPumpEnabled"))
+				return false;			
+			if (v.HasChild("pump_controller") && v.GetEnergy() > 0.1f * v.GetMaxEnergy() && v.GetVehicleType() == VT_FIREFIGHTERS_GTF)
+			{
+				SetIcon("pumps_install");
+				SetCursor("install");
+				if (v.IsInstalled())
+					SetPriority(2000);				
+				return true;
+			}
+		}			
+ 		return false;
+ 	}	
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 0)
+		{
+			Person p(Caller);
+			Vehicle v(Target);
+			Vector PosChild = v.GetChildPosition("pump_controller");
+			p.PushActionMove(ACTION_NEWLIST, PosChild);
+			p.PushActionTurnTo(ACTION_APPEND, &v);
+			p.PushActionExecuteCommand(ACTION_APPEND, "PcmdPumpSwitch", &v, 1, false);
+		}
+		if (childID == 1)
+		{
+			Person p(Caller);
+			Vehicle v(Target);
+			if (!v.HasCommand("DummyPumpEnabled"))
+			{
+				p.AssignCommand("DummyPumpEnabled");
+				p.SetUserData(v.GetID());
+				p.PushActionSwitchAnim(ACTION_NEWLIST, "useextinguis");
+				Audio::PlaySample3D("mod:Audio/FX/misc/pump_on.wav", v.GetPosition());
+				v.AssignCommand("DummyPumpEnabled");
+				v.EnableCommand("MoveTo", false);
+				v.EnableCommand("GoHome", false);
+				//p.SetCommandable(false);
+				//p.SetSelectable(false);
+			}
+		}			
+	}
+};
+
+object DummyPumpEnabled : CommandScript
+{
+ 	DummyPumpEnabled()
+ 	{
+ 		SetGroupID(20);
+ 	}
+  
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 	}	
+};
+
+object DummyLimitedWater : CommandScript
+{
+ 	DummyLimitedWater()
+ 	{
+ 		SetGroupID(20);
+ 	}
+  
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 	}	
+};

@@ -1,0 +1,1091 @@
+//**************************************************************************** 
+//**************************************************************************** 
+//	- ChangeTofeu
+//	- ChangeToARI
+//  - ChangeToGHV
+//	- ChangeToCHIMIQUE
+//	- ChangeToPOLICEGHV
+//	- ChangeToPOLICENormal
+//**************************************************************************** 
+
+
+const char OBJ_FC[]				= "mod:Prototypes/Vehicles/Fire Department/FCnoinstal.e4p";
+const char OBJ_BARRIERE[]			= "mod:Prototypes/Vehicles/06 Objects/police_barricade.e4p";
+const char OBJ_TRIFLASH[]			= "mod:Prototypes/Vehicles/06 Objects/flare.e4p";
+const char OBJ_CONE[]			= "mod:Prototypes/Vehicles/Police/pylon.e4p";
+const char OBJ_WYE[]			= "mod:Prototypes/Vehicles/06 Objects/wye.e4p";
+const char OBJ_EXTEND[]			= "mod:Prototypes/Vehicles/06 Objects/fire_hose_extension.e4p";
+
+
+object Tenue_arichi: CommandScript
+{
+	Tenue_arichi()
+	{
+		SetCursor("arichim_cur");
+		SetIcon("arichim");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}	
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 1, false);
+	}
+};
+
+object Tenue_arifeu: CommandScript
+{
+	Tenue_arifeu()
+	{
+		
+		SetCursor("arifeu_cur");
+		SetIcon("arifeu");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 2, false);
+	}
+};
+
+object Tenue_arighv: CommandScript
+{
+	Tenue_arighv()
+	{
+				
+		SetCursor("arighv_cur");
+		SetIcon("arighv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 3, false);
+	}
+};
+
+object Tenue_chiari: CommandScript
+{
+	Tenue_chiari()
+	{
+		
+		SetCursor("chiari_cur");
+		SetIcon("chiari");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if(StrCompare(v.GetPrototypeFileName(), OBJ_FC) == 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 4, false);
+	}
+};
+
+object Tenue_chifeu: CommandScript
+{
+	Tenue_chifeu()
+	{
+		
+		SetCursor("chifeu_cur");
+		SetIcon("chifeu");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 2, false);
+	}
+};
+
+object Tenue_chighv: CommandScript
+{
+	Tenue_chighv()
+	{
+		
+		SetCursor("chighv_cur");
+		SetIcon("chighv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 3, false);
+	}
+};
+
+object Tenue_feuari: CommandScript
+{
+	Tenue_feuari()
+	{
+		
+		SetCursor("feuari_cur");
+		SetIcon("feuari");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if(StrCompare(v.GetPrototypeFileName(), OBJ_FC) == 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 4, false);
+	}
+};
+
+object Tenue_feuchi: CommandScript
+{
+	Tenue_feuchi()
+	{
+		
+		SetCursor("feuchi_cur");
+		SetIcon("feuchi");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 1, false);
+	}
+};
+
+object Tenue_feughv: CommandScript
+{
+	Tenue_feughv()
+	{
+		
+		SetCursor("feughv_cur");
+		SetIcon("feughv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 3, false);
+	}
+};
+
+object Tenue_ghvari: CommandScript
+{
+	Tenue_ghvari()
+	{
+		
+		SetCursor("ghvari_cur");
+		SetIcon("ghvari");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if(StrCompare(v.GetPrototypeFileName(), OBJ_FC) == 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 4, false);
+	}
+};
+
+object Tenue_ghvchi: CommandScript
+{
+	Tenue_ghvchi()
+	{
+		
+		SetCursor("ghvchi_cur");
+		SetIcon("ghvchi");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_DEKONP)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 1, false);
+	}
+};
+
+object Tenue_ghvfeu: CommandScript
+{
+	Tenue_ghvfeu()
+	{
+		
+		SetCursor("ghvfeu_cur");
+		SetIcon("ghvfeu");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsFirefighter() && StrCompare(v.GetPrototypeFileName(), OBJ_WYE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_EXTEND) != 0)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 2, false);
+	}
+};
+
+// POLICE
+
+object Tenue_polcrs: CommandScript
+{
+	Tenue_polcrs()
+	{
+		SetCursor("polcrs_cur");
+		SetIcon("polcrs");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 6, false);
+	}
+};
+
+object Tenue_ghvpol: CommandScript
+{
+	Tenue_ghvpol()
+	{
+		
+		SetCursor("ghvpol_cur");
+		SetIcon("ghvpol");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 7, false);
+	}
+};
+
+object Tenue_polghv: CommandScript
+{
+	Tenue_polghv()
+	{
+		
+		SetCursor("polghv_cur");
+		SetIcon("polghv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 8, false);
+	}
+};
+
+object Tenue_crsghv: CommandScript
+{
+	Tenue_crsghv()
+	{
+		
+		SetCursor("crsghv_cur");
+		SetIcon("crsghv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 8, false);
+	}
+};
+
+object Tenue_crspol: CommandScript
+{
+	Tenue_crspol()
+	{
+		
+		SetCursor("crspol_cur");
+		SetIcon("crspol");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 7, false);
+	}
+};
+
+//GENDARMERIE
+
+object Tenue_genghv: CommandScript
+{
+	Tenue_genghv()
+	{
+		
+		SetCursor("genghv_cur");
+		SetIcon("genghv");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 11, false);
+	}
+};
+
+object Tenue_ghvgend: CommandScript
+{
+	Tenue_ghvgend()
+	{
+		
+		SetCursor("ghvgen_cur");
+		SetIcon("ghvgen");
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetPriority(0);
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person p(Caller);
+		if (!p.IsValid())
+			return false;
+
+		if (p.IsInDLKBasket())
+			return false;
+
+		if (p.IsContaminated() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.IsPulling() || p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Target);
+		if (v.IsPolice() && v.GetVehicleType() != VT_POLICE_PHC && StrCompare(v.GetPrototypeFileName(), OBJ_BARRIERE) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_TRIFLASH) != 0 && StrCompare(v.GetPrototypeFileName(), OBJ_CONE) != 0)
+			return true;
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EQUIPMENTDOOR);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "useobjmidloop");
+		Caller->PushActionWait(ACTION_APPEND, 3.f);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, "DummyChange", Target, 10, false);
+	}
+};
+
+object DummyChange: CommandScript
+{
+	DummyChange()
+	{
+		SetGroupID(20);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(childID == 1)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Fire Department/SP_CHI.e4p");
+		if(childID == 2)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Fire Department/SP_FEU.e4p");
+		if(childID == 3)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Fire Department/SP_GHV.e4p");
+		if(childID == 4)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Fire Department/SP_ARI.e4p");
+		if(childID == 6)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Police/crs.e4p");
+		if(childID == 7)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Police/polnormal.e4p");
+		if(childID == 8)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Police/polgilet.e4p");
+		if(childID == 10)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Police/gnormal.e4p");
+		if(childID == 11)
+			Caller->ChangePrototype("mod:Prototypes/Persons/Police/ggilet.e4p");
+	}
+};

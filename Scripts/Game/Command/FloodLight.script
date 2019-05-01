@@ -1,0 +1,101 @@
+//******************************************************************************************
+// #Version 2.1#
+//
+// 		Includes: All Flood Light commands
+//
+//	- InstallFloodLight
+//
+//		Script by Hoppah, edited by Superjajaman75.
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_INSTALL_FLOODLIGHT[]		= "InstallFloodLight";
+const char CMD_FLOODLIGHTS_OFF[]		= "VCmdFloodLightsOff";
+const char CMD_ROTATE_CW[]				= "Rotation_Droite";
+const char CMD_ROTATE_CCW[]				= "Rotation_Gauche";
+const char CMD_DELETE[]					= "Delete";
+const char OBJ_FLOODLIGHT[]				= "mod:Prototypes/Vehicles/06 Objects/floodlight.e4p";
+const char NAME_FLOODLIGHT[]			= "Floodlight";
+const char HINT_FLOODLIGHT[]			= "Pas de place pour installer le mat d'eclairage!";
+
+object InstallFloodLight : CommandScript
+{
+	InstallFloodLight()
+	{
+		SetCursor("floodlight");
+		SetIcon("floodlight");
+ 		SetGroupLeader(true);
+		SetPriority(300);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_PERSON)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_PERSON)
+ 			return true;
+ 
+ 		return false;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Caller->PushActionWait(ACTION_NEWLIST, 0.1f);
+		Vector CarPos = Caller->GetPosition();
+			float r[9];
+			float childr[9];
+		Caller->GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+
+		if (Game::FindFreePosition(Caller, CarPos, 50.f))
+		{
+            Vehicle v;
+            v = Game::CreateVehicle(OBJ_FLOODLIGHT, NAME_FLOODLIGHT);
+			if (v.IsValid())
+			{
+				float dx = 50.f, dy = 0.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(90.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				CarPos = CarPos + Vector(dx, dy, 0);
+				v.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				v.SetPosition(CarPos);
+				v.UpdatePlacement();
+			}
+			v.SetCommandable(true);
+			v.EnableSpecialLights(true);
+			v.AssignCommand(CMD_FLOODLIGHTS_OFF);
+			v.AssignCommand(CMD_DELETE);
+			v.AssignCommand(CMD_ROTATE_CW);
+			v.AssignCommand(CMD_ROTATE_CCW);
+
+			int UnitID = p.GetID();
+			v.SetUserData(UnitID);
+
+			int PlayerID = p.GetPlayerMP();
+			v.SetPlayerMP(PlayerID);
+		}
+		else
+		{
+			Mission::PlayHint(HINT_FLOODLIGHT);
+		}
+	}
+};

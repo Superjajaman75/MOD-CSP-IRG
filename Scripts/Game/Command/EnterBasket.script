@@ -1,0 +1,140 @@
+object EnterBasket: CommandScript
+{
+	bool install;
+
+	EnterBasket()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetGroupID(CGROUP_DLK_BASKET);
+		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_NOTDESTROYED | RESTRICT_IDLE);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_FREE_DLK);
+		SetPriority(250);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		return !p.IsInDLKBasket();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		/*if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;*/
+		Person p(Caller);
+		return !p.IsInDLKBasket()/* && Game::ExistsFreeDLK()*/;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetType() != ACTOR_VEHICLE ||
+			Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		Vehicle v(Target);
+		if (/*!v.IsInstalled() || */v.GetVehicleType() != VT_FIREFIGHTERS_DLK || v.IsUplifting() || !v.IsBasketEmpty())
+			return false;
+
+		Person p(Caller);
+		if (p.GetEnteredCarID() != -1 || (p.GetEquipment()==EQUIP_FIREHOSE && p.GetFirehoseID() != 0))
+			return false;			
+			
+		install = false;
+		if (!v.IsInstalled())
+		{
+			if (p.IsLinkedWithPerson() || p.IsCarryingPerson())
+				return false;
+			install = true;
+		}
+
+		if (p.GetEnteredHouseID() == -1)
+		{
+			// person is in open area
+			return true;
+		}
+		else
+		{
+			// person is in house
+			// check if house has ground entrance
+			if (p.IsInHouseWithGroundEntrance())
+				return true;
+			else
+			{
+				// check if vehicle is installed at this house
+				if (p.GetEnteredHouseID() == v.GetInstallTargetID())
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Target);
+		Person p(Caller);
+		Vector TargetPos;
+		if (p.GetEnteredHouseID() == -1 || p.IsInHouseWithGroundEntrance())
+			TargetPos = v.GetTargetPoint(Caller, TARGET_DLK_BASKET_BASE);
+		else
+			TargetPos = p.GetEnteredHouseEntrancePosition(false);
+
+		int mode;	// 0 - enter direct, 1 - call up, 2 - call down
+		if (p.GetEnteredHouseID() == -1)
+		{
+			// person is in open area
+			if (v.IsUplifted())
+				mode = 2;
+			else
+				mode = 0;
+		}
+		else
+		{
+			// person is in house
+			// check if house has ground entrance
+			if (p.IsInHouseWithGroundEntrance())
+			{
+				// Need to leave house
+				if (v.IsUplifted())
+					mode = 1;
+				else
+					mode = 0;
+			}
+			else
+			{
+				// check if vehicle is installed at this house
+				if (p.GetEnteredHouseID() == v.GetInstallTargetID())
+				{
+					if (v.IsUplifted())
+						mode = 0;
+					else
+						mode = 1;
+				}
+			}
+		}
+
+		switch (mode)
+		{
+			case 0:	// enter directly
+				Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+				Caller->PushActionEnterBasket(ACTION_APPEND, Target);
+				break;
+			case 1:	// call up
+				v.PushActionBasketUp(ACTION_NEWLIST);
+				Caller->PushActionMove(ACTION_APPEND, TargetPos);
+				Caller->PushActionEnterBasket(ACTION_APPEND, Target);
+				break;
+			case 2:	// call down
+				v.PushActionBasketDown(ACTION_NEWLIST, Vector(0.f, 0.f, 0.f));
+				Caller->PushActionMove(ACTION_APPEND, TargetPos);
+				Caller->PushActionEnterBasket(ACTION_APPEND, Target);
+				break;
+		}
+		if (install)
+			v.PushActionInstall(ACTION_NEWLIST, Target);
+	}
+};

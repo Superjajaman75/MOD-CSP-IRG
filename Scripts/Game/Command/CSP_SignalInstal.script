@@ -1,0 +1,394 @@
+const char PROTO_VPC1[] 			= "mod:Prototypes/Vehicles/Fire department/vpc-deployer.e4p";
+const char PROTO_VPC2[] 			= "mod:Prototypes/Vehicles/Fire department/vpc-redeployer.e4p";
+const char PROTO_FSR2[] 			= "mod:Prototypes/Vehicles/Fire department/FSR2install.e4p";
+const char PROTO_FSR1[] 			= "mod:Prototypes/Vehicles/Fire department/FSR2.e4p";
+const char PROTO_TRAFIC2[] 			= "mod:Prototypes/Vehicles/Police/traficpn1_1.e4p";
+const char PROTO_TRAFIC1[] 			= "mod:Prototypes/Vehicles/Police/traficpn1.e4p";
+const char PROTO_SANEF2[] 			= "mod:Prototypes/Vehicles/TEC/sanef_install.e4p";
+const char PROTO_SANEF1[] 			= "mod:Prototypes/Vehicles/TEC/Sanef01.e4p";
+const char PROTO_MASTER2[] 			= "mod:Prototypes/Vehicles/Police/master_policebalisage1.e4p";
+const char PROTO_MASTER1[] 			= "mod:Prototypes/Vehicles/Police/master_policebalisage.e4p";
+
+const char CMD_DIRECTIONALLIGHTS_OFF[]		= "VcmdDirectionalLightsOff";
+
+
+object SignalInstall_VPC1 : CommandScript
+{
+	SignalInstall_VPC1()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_VPC2);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_VPC2 : CommandScript
+{
+	SignalInstall_VPC2()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF)) 
+			Game::ExecuteCommand(CMD_DIRECTIONALLIGHTS_OFF, &v, &v);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_VPC1);
+		v.EnableBlueLights(LIGHT);
+
+	}
+};
+
+object SignalInstall_FSR1 : CommandScript
+{
+	SignalInstall_FSR1()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_FSR2);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_FSR2 : CommandScript
+{
+	SignalInstall_FSR2()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF)) 
+			Game::ExecuteCommand(CMD_DIRECTIONALLIGHTS_OFF, &v, &v);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_FSR1);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Trafic1 : CommandScript
+{
+	SignalInstall_Trafic1()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_TRAFIC2);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Trafic2 : CommandScript
+{
+	SignalInstall_Trafic2()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF)) 
+			Game::ExecuteCommand(CMD_DIRECTIONALLIGHTS_OFF, &v, &v);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_TRAFIC1);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Sanef1 : CommandScript
+{
+	SignalInstall_Sanef1()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_SANEF2);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Sanef2 : CommandScript
+{
+	SignalInstall_Sanef2()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF)) 
+			Game::ExecuteCommand(CMD_DIRECTIONALLIGHTS_OFF, &v, &v);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_SANEF1);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Master1 : CommandScript
+{
+	SignalInstall_Master1()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_MASTER2);
+		v.EnableBlueLights(LIGHT);
+	}
+};
+
+object SignalInstall_Master2 : CommandScript
+{
+	SignalInstall_Master2()
+	{
+		SetIcon("install");
+		SetCursor("install");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(CGROUP_INSTALL);
+		SetGroupLeader(true);
+		SetPriority(50);	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+ 			return false;
+ 		return true;
+	}
+			
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Vehicle v(Caller);
+		if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF)) 
+			Game::ExecuteCommand(CMD_DIRECTIONALLIGHTS_OFF, &v, &v);
+		bool LIGHT = v.IsBlueLightEnabled();
+		v.ChangePrototype(PROTO_MASTER1);
+		v.EnableBlueLights(LIGHT);
+	}
+};

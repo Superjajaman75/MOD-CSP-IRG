@@ -1,0 +1,154 @@
+object Cool : CommandScript
+{
+	bool useDLKlogic;
+
+	Cool()
+	{
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_OBJECT | ACTOR_HOUSE | ACTOR_OPEN_HOUSE);
+		SetRestrictions(RESTRICT_COOLABLE | RESTRICT_NOTBURNING);
+		SetKeepAsCurrentCommand(true);
+		SetPossibleCallers(ACTOR_PERSON | ACTOR_VEHICLE);
+		SetPossibleEquipment(EQUIP_FIRE_EXTINGUISHER | EQUIP_FIREHOSE);
+		SetPossibleExists(CPE_COOLABLE_OBJECTS);
+		SetNeedsConnectedHose(CFN_NEEDED);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid())
+			return false;
+		if (Caller->GetType() == ACTOR_VEHICLE || Caller->GetEquipment()==EQUIP_FIRE_EXTINGUISHER || (Caller->GetEquipment()== EQUIP_FIREHOSE && Caller->GetFirehoseID() != 0))
+			return Game::ExistsCoolableobject();
+		return false;
+	}*/
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target || !Target->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		if(Target->GetType() == ACTOR_PERSON)
+			return false;
+
+		GameObject o(Target);
+		if (!o.IsValid() || o.GetNumActiveFireChilds() == 0)
+			return false;
+			
+		if (o.GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Target);
+			if ((v.GetVehicleType() == VT_POLICE_PHC || v.GetVehicleType() == VT_AMBULANCE_RHC) && !v.IsOnGround())
+			   	return false;
+		}
+			
+		if (Caller->GetType() == ACTOR_PERSON )
+		{
+			Person p(Caller);
+			if (p.GetEquipment() == EQUIP_FIREHOSE && o.GetParentHouseID() > -1)
+				return false;
+			if (p.CanUseDLKCannon())
+			{
+				useDLKlogic = true;
+				if (o.GetNumActiveFireChilds() == 0)
+					return false;
+				if (p.GetEnteredCarTargetID() != -1 && p.GetEnteredCarTargetID() != Target->GetID())
+					return false;
+				if (p.GetEnteredCarID() == Target->GetID())
+					return false;
+			
+				if (!p.CheckDLKExtinguishDistance(Target))
+					return false;
+			
+				if (p.GetEnteredCarTargetID() != -1/* && o.IsBurningInside()*/)
+					return false;
+				else if (p.GetEnteredCarTargetID() == -1 && o.IsBurningOutside())
+					return false;
+			
+				return true;
+			}
+			if (p.GetEnteredCarID() != -1)
+			   	return false;
+		}
+		
+		useDLKlogic = false;
+
+		if (Caller->GetType() == ACTOR_VEHICLE || Caller->GetEquipment()==EQUIP_FIRE_EXTINGUISHER || Caller->GetEquipment()== EQUIP_FIREHOSE)
+		{
+			if (Caller->GetEquipment() == EQUIP_FIREHOSE && Caller->GetFirehoseID() == 0)
+				return false;
+			return true;
+		}
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Target)
+			return;
+
+		if (useDLKlogic)
+		{
+			Person p(Caller);
+			
+			if (p.GetEnteredCarTargetID() != -1)
+			{
+				Caller->PushActionCannonExtinguish(ACTION_NEWLIST, Target, 100.f, true);
+			}
+			else
+			{
+				Caller->PushActionTurnBase(ACTION_NEWLIST, Target);
+				Caller->PushActionCannonExtinguish(ACTION_APPEND, Target, 100.f, true);
+			}
+			return;
+		}
+
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			GameObject o(Target);
+			Vehicle v(Caller);
+			if (v.IsCurrentAnimation("activate"))
+			{
+				int UnitID = v.GetID();	
+				GameObjectList l1 = Game::GetGameObjectsWithPrefix("engine_water_cannon");
+				for(int i = 0; i < l1.GetNumObjects(); i++)
+				{
+					if (l1.GetObject(i)->GetType() == ACTOR_VEHICLE)
+					{
+						Vehicle obj(l1.GetObject(i));
+						if (obj.GetUserData() == UnitID && obj.CheckExtinguishDistance(o) && obj.GetVehicleType()==VT_FIREFIGHTERS_TLF)
+							obj.PushActionCool(ACTION_NEWLIST, Target);
+					}
+				}
+				return;
+			}		
+			else if (!v.CheckExtinguishDistance(o))
+			{
+				if (v.HasCommand("VcmdRotateLightmast"))
+					return;
+				if (Target->GetType() == ACTOR_VEHICLE)
+					Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_ENGINE_EXTINGUISH);
+				else
+					Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EXTINGUISH);
+				Caller->PushActionCool(ACTION_APPEND, Target);
+			}
+			else
+			    Caller->PushActionCool(ACTION_NEWLIST, Target);
+		}
+		else if (Caller->GetType() == ACTOR_PERSON)
+		{	
+			if (Target->GetType()==ACTOR_VEHICLE)
+			{
+				Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_ENGINE_EXTINGUISH);
+				Vector Pos = Target->GetTargetPoint(Caller, TARGET_ENGINE);
+				Caller->PushActionTurnTo(ACTION_APPEND, Pos);
+			}
+			else
+			{
+				Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_EXTINGUISH);
+				Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			}
+		}
+		Caller->PushActionCool(ACTION_APPEND, Target);
+	}
+	
+};

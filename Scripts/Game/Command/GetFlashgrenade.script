@@ -1,0 +1,53 @@
+object GetFlashgrenade : CommandScript
+{
+	GetFlashgrenade()
+	{
+		SetIcon("getgrenade");
+		SetCursor("getgrenade");
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_OBJECT);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetRestrictions(RESTRICT_NOTDESTROYED | RESTRICT_NOTBURNING | RESTRICT_HASFLASHGRENADE);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetNeedsCarWithFlagSet(OF_HAS_FLASHGRENADE);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if (p.GetEquipment()==EQUIP_FLASHGRENADE || p.IsCarryingPerson()||p.IsLinkedWithPerson()|| p.GetFirehoseID()!=0 || p.IsPulling())
+			return false;
+		if (!Game::ExistsNormalObjectWithFlagSet(OF_HAS_FLASHGRENADE))
+			return false;
+		return true;
+	}*/
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+			
+		Person p(Caller);
+		if(p.IsValid() && p.IsLinkedWithPerson() || p.GetEnteredCarID() != -1)
+			return false;
+
+		GameObject obj(Target);
+		if (Caller->GetObjectType()==TYPE_PERSON && Caller->GetEquipment()!=EQUIP_FLASHGRENADE &&
+			obj.IsValid() && obj.IsFlagSet(OF_HAS_FLASHGRENADE))
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_EQUIPMENTDOOR);
+		
+		Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionGetEquipment(ACTION_APPEND, Target, EQUIP_FLASHGRENADE);
+	}
+};

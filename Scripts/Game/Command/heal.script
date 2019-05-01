@@ -1,0 +1,124 @@
+//******************************************************************************************
+//
+// 		Changes: - No heal without bag
+//			     - Blanket command added
+//	
+//	Modified by Hoppah and Superjajaman75 
+//
+//******************************************************************************************
+
+const char HINT_NOSTABILIZE[]			= "Cette personne est trop sévèrement blessé et ne peut pas être stabilisé!";
+const char HINT_BAG[]					= "Vous avez besoin d'un medecin avec le sac pour defibriller cette personne!";
+const char HINT_DEAD[]					= "Cette personne est morte et ne peut plus être traitée!";
+const char HINT_STAB[]					= "Personne stabilise, medecin urgentise necessaire!";
+const char HINT_REAN[]					= "Personne reanimee, medecin urgentise necessaire!";
+const char CMD_DEAD[]					= "PcmdDead";
+
+const char OBJ_SAMUBRA[]				= "mod:Prototypes/Persons/Ambulance/SAMU_BRA.e4p";
+const char OBJ_SAMUMED[]				= "mod:Prototypes/Persons/Ambulance/SAMU_MED.e4p";
+const char OBJ_BRA[]					= "mod:Prototypes/Persons/Ambulance/PC_BRA.e4p";
+const char OBJ_SEC[]					= "mod:Prototypes/Persons/Ambulance/PC_MED.e4p";
+const char OBJ_MED[]					= "mod:Prototypes/Persons/Fire Department/SP_MED.e4p";
+
+object Heal : CommandScript
+{
+	Heal()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetRestrictions(RESTRICT_NOTARRESTED);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_INJURED_PERSON | CPE_WOUNDED_SQUAD);
+		SetPriority(300);
+		SetSelfClickActivation(true);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		/*if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;*/
+		Person c(Caller);
+		if(c.IsParamedicTeam() && c.IsCarryingPerson())
+			return false;
+
+		//return Game::ExistsInjuredPerson() || Game::ExistsWoundedSquad();
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() == Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		if(p.IsParamedicTeam() && p.IsCarryingPerson())
+			return false;
+
+		if(Target->GetType()==ACTOR_PERSON)
+		{
+			Person t(Target);
+			if (p.IsParamedicTeam() && t.GetRole() == ROLE_SQUAD && !t.IsInjured())
+				return false;
+				
+			if(t.HasCommand("DummyBlanket"))
+				return false;
+				
+			if(!t.IsDrowning() && !t.IsHealing() && t.GetRole() != ROLE_ANIMAL && !t.IsRescueDog() && (t.IsInjured() || t.IsWoundedSquad()) && t.GetEnteredCarID() == -1 && !t.IsCarried() )
+				return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Person t(Target);
+		
+		if (!t.IsClassified())
+			t.SetClassified(true);
+			
+		if (p.GetEquipment() != EQUIP_EMERGENCY_CASE &&  !p.IsParamedicTeam())
+			Mission::PlayHint(HINT_BAG);
+		
+		p.PushActionMove(ACTION_NEWLIST, Target, TARGET_TREATMENT);
+		p.PushActionTurnTo(ACTION_APPEND, Target);
+		if (t.IsDead())
+		{
+			p.PushActionExecuteCommand(ACTION_APPEND, CMD_DEAD, &t, 0, false);
+			return;
+		}
+
+		if (StrCompare(p.GetPrototypeFileName(), OBJ_MED) == 0 || StrCompare(p.GetPrototypeFileName(), OBJ_SAMUMED) == 0)
+			p.PushActionHeal(ACTION_APPEND, &t);
+		
+		else if (StrCompare(p.GetPrototypeFileName(), OBJ_BRA) == 0 || StrCompare(p.GetPrototypeFileName(), OBJ_SAMUBRA) == 0)
+		{
+			if (t.GetLife() < 0.8f * t.GetMaxLife())
+			{
+				p.PushActionHeal(ACTION_APPEND, &t, true);
+				t.SetInjuredLifeDrain(0.f);
+				Mission::PlayHint(HINT_STAB);
+			} else {
+				p.PushActionHeal(ACTION_APPEND, &t);
+			}
+		}
+		else if (StrCompare(p.GetPrototypeFileName(), OBJ_SEC) == 0)
+		{
+			if (t.IsComatose()) {
+				p.PushActionHeal(ACTION_APPEND, &t);
+				t.SetInjuredLifeDrain(0.f);
+				t.SetLife(0.1f * t.GetMaxLife());
+				Mission::PlayHint(HINT_REAN);
+			} else if (t.GetLife() < 0.5f * t.GetMaxLife())
+			{
+				p.PushActionHeal(ACTION_APPEND, &t, true);
+				t.SetInjuredLifeDrain(0.f);
+				Mission::PlayHint(HINT_STAB);
+			}
+			else
+				p.PushActionHeal(ACTION_APPEND, &t);
+		}
+		else
+			p.PushActionHeal(ACTION_APPEND, &t, true);
+	}
+};

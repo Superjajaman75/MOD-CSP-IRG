@@ -1,0 +1,57 @@
+object LoadUp : CommandScript
+{
+	LoadUp()
+	{
+		SetIcon("liftwithcrane");
+		SetCursor("liftwithcrane");
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_OBJECT);
+		SetRestrictions(RESTRICT_TRANSPORTABLE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		return !Caller->IsCarryingAnything() && Game::ExistsObjectWithFlagSet(OF_TRANSPORTABLE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+
+		if(Caller->GetObjectType()!=TYPE_VEHICLE)
+			return false;
+
+		// check if caller already carries an object
+		GameObjectList ol = Caller->GetCarriedObjects();
+		if(ol.GetNumObjects() > 0)
+			return false;
+			
+		// check if target object can be picked up
+		GameObject obj(Target);
+		if (!obj.IsValid() || obj.IsFlagSet(OF_PERSON_ENCLOSED) || !obj.IsFlagSet(OF_TRANSPORTABLE))
+			return false;
+
+		if (Target->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Target);
+			if (v.GetEnergy() <= 0.1f * v.GetMaxEnergy() && !v.IsSmoking() && !v.IsBurning())
+				return true; // Fahrzeug kaputt und gelöscht
+			if (v.IsDestroyed())
+				return true; // Fahrzeug zerstört
+ 			if (StrCompare(v.GetPrototypeFileName(), "mod:Prototypes/Vehicles/GENDARMERIE/vm1.e4p") == 0 && v.IsCurrentAnimation("Getoff"))
+				return true; // Motorcycle without officer
+			if (!v.IsParking())
+				return false; // normales Fahrzeug, welches nicht parkt
+		}
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_LOADUP);
+		Caller->PushActionLoadUp(ACTION_APPEND, Target);
+	}	
+};

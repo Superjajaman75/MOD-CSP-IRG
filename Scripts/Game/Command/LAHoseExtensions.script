@@ -1,0 +1,284 @@
+//***************************************************************************************
+//	    Hose Extension and Gated Wye script for the New York City mod and Los Angeles Mod
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//		Scripts by Hoppah and MikeyPI, Modified by The Loot and Superjajaman75					
+//***************************************************************************************
+
+object PcmdExtendhose : CommandScript
+{
+	PcmdExtendhose()
+	{
+		SetIcon("rallonge");
+		SetCursor("rallonge");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		//SetRestrictions2(RESTRICT2_ISHYDRANTORSELF);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		/*GameObject o = Caller->GetHydrant();
+		if (o.HasName("extend_wye") || o.HasName("extend_hose"))
+			return false;*/
+		return Caller->GetFirehoseID() != 0;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid())
+			return false;				
+		if (Caller->GetEquipment()==EQUIP_FIREHOSE && Caller->GetType() == ACTOR_PERSON && Caller->GetFirehoseID() != 0)
+		{
+			if (Caller->GetID()==Target->GetID())
+				return true;
+			/*GameObject o = Caller->GetHydrant();
+			if (o.HasName("extend_wye") || o.HasName("extend_hose"))
+				return false;*/			
+		}		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		if (childID == 0)
+		{
+			GameObject hydrant = Caller->GetHydrant();
+			p.SetCommandable(false);
+			p.PushActionSwitchAnim(ACTION_NEWLIST, "kneeldown");
+			p.PushActionWait(ACTION_APPEND, 2.0f);
+			p.PushActionExecuteCommand(ACTION_APPEND, "PcmdExtendhose", &hydrant, 1, false);			
+		}
+		if (childID == 1)
+		{		
+			GameObject hydrant(Target);
+			Vector Pos = p.GetPosition();
+				float r[9];
+				float childr[9];
+			p.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			Vehicle m = Game::CreateVehicle("mod:Prototypes/Vehicles/06 Objects/fire_hose_extension.e4p", "extend_hose");
+			float dx = 9.f, dy = -24.f, dz = 21.f;
+			Math::RotateVector(dx, dy, dz, r);
+			Math::EulerToMatrix(20.0f, 0.f, 0.f, childr);
+			Math::MultiplyMatrices(childr, r);
+			Pos = Pos + Vector(dx, dy, dz);
+			m.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+			m.SetPosition(Pos);
+			m.UpdatePlacement();
+			m.SetUserData(hydrant.GetID());						
+			m.SetPlayerMP(p.GetPlayerMP());
+			m.SetSelectable(false);
+			Vector PerPos = p.GetPosition();			
+			Person n = Game::CreatePerson(p.GetPrototypeFileName(), Caller->GetName());
+			if (n.IsValid()) && Game::FindFreePosition(&n, PerPos))
+			{
+				n.SetEquipment(EQUIP_FIREHOSE);
+				float dx = -30.f, dy = -20.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				PerPos = PerPos + Vector(dx, dy, dz);
+				n.SetPosition(PerPos);
+				n.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				n.PushActionMove(ACTION_NEWLIST, &m, TARGET_FREE_CONNECTOR);
+				n.PushActionCheckFreeConnector(ACTION_APPEND, &m);
+				n.PushActionUseEquipment(ACTION_APPEND, &m, 0, 1.0f);			
+				n.SetPlayerMP(p.GetPlayerMP());
+				n.SetHealth(p.GetHealth());
+				n.SetUpgradeLevel(3);
+			}
+			p.SetUserData(m.GetID());
+			p.EnableAutoTarget(false);
+			if (p.IsSelected())
+				p.Deselect();
+			if (!p.IsFlagSet(OF_HIDDEN))
+				p.SetFlag(OF_HIDDEN);
+			p.SetResistance(INJUREREASON_UNKNOWN, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_ATOM, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_CHEM, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_BIO, 100000.0f);			
+		}
+		if (childID == 2 || childID == 3)
+		{
+			Vehicle v(Target);
+			if(!v.IsInstalled())
+			{
+				int UnitID = v.GetID();
+				PersonList list = Game::GetFirefighters();
+				for(int i = 0; i < list.GetNumPersons(); i++)
+				{
+					if (list.GetPerson(i)->GetUserData() == UnitID && list.GetPerson(i)->IsFlagSet(OF_HIDDEN))
+					{
+						Person *n = list.GetPerson(i);
+						n->ClearFlag(OF_HIDDEN);
+						n->SetCommandable(true);
+						n->PushActionSwitchAnim(ACTION_NEWLIST, "idle");
+						if (p.IsSelected())
+							n->Select();
+						n->EnableAutoTarget(true);
+						n->SetResistance(INJUREREASON_UNKNOWN, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_ATOM, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_CHEM, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_BIO, 0.0f);
+						v.PushActionDeleteOwner(ACTION_NEWLIST);
+						p.PushActionDeleteOwner(ACTION_NEWLIST);
+						n->SetUserData(0);
+						if (childID == 3)
+							n->PushActionExecuteCommand(ACTION_APPEND, "RemoveFirehose", n, 3, false);
+					} else
+						v.PushActionDeleteOwner(ACTION_NEWLIST);
+				}
+			} else
+				return;
+		}	
+	}
+};
+
+object PcmdWye : CommandScript
+{
+	PcmdWye()
+	{
+		SetIcon("verteiler");
+		SetCursor("wye");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		//SetRestrictions2(RESTRICT2_ISHYDRANTORSELF);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		/*GameObject o = Caller->GetHydrant();
+		if (o.HasName("extend_wye") || o.HasName("extend_hose"))
+			return false;*/
+		return Caller->GetFirehoseID() != 0;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid())
+			return false;				
+		if (Caller->GetEquipment()==EQUIP_FIREHOSE && Caller->GetType() == ACTOR_PERSON && Caller->GetFirehoseID() != 0)
+		{
+			if (Caller->GetID()==Target->GetID())
+				return true;
+			/*GameObject o = Caller->GetHydrant();
+			if (o.HasName("extend_wye") || o.HasName("extend_hose"))
+				return false;*/				
+		}		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		if (childID == 0)
+		{
+			GameObject hydrant = Caller->GetHydrant();
+			p.SetCommandable(false);
+			p.PushActionSwitchAnim(ACTION_NEWLIST, "kneeldown");
+			p.PushActionWait(ACTION_APPEND, 2.0f);
+			p.PushActionExecuteCommand(ACTION_APPEND, "PcmdWye", &hydrant, 1, false);			
+		}
+		if (childID == 1)
+		{		
+			GameObject hydrant(Target);
+			Vector Pos = p.GetPosition();
+				float r[9];
+				float childr[9];
+			p.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			Vehicle m = Game::CreateVehicle("mod:Prototypes/Vehicles/06 Objects/wye.e4p", "extend_wye");
+			float dx = 15.f, dy = -24.f, dz = 16.f;
+			Math::RotateVector(dx, dy, dz, r);
+			Math::EulerToMatrix(20.0f, 0.f, 0.f, childr);
+			Math::MultiplyMatrices(childr, r);
+			Pos = Pos + Vector(dx, dy, dz);
+			m.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+			m.SetPosition(Pos);
+			m.UpdatePlacement();
+			m.SetUserData(hydrant.GetID());						
+			m.SetPlayerMP(p.GetPlayerMP());
+			m.SetSelectable(false);
+			Vector PerPos = p.GetPosition();			
+			Person n = Game::CreatePerson(p.GetPrototypeFileName(), Caller->GetName());
+			if (n.IsValid()) && Game::FindFreePosition(&n, PerPos))
+			{
+				float dx = -30.f, dy = -20.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				PerPos = PerPos + Vector(dx, dy, dz);
+				n.SetPosition(PerPos);
+				n.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				n.SetPlayerMP(p.GetPlayerMP());
+				n.SetHealth(p.GetHealth());
+				n.SetUpgradeLevel(3);
+				n.SetEquipment(EQUIP_FIREHOSE);
+				n.PushActionMove(ACTION_NEWLIST, &m, TARGET_FREE_CONNECTOR);
+				n.PushActionCheckFreeConnector(ACTION_APPEND, &m);
+				n.PushActionUseEquipment(ACTION_APPEND, &m, 0, 1.0f);
+			}
+			p.SetUserData(m.GetID());
+			p.EnableAutoTarget(false);
+			if (p.IsSelected())
+				p.Deselect();
+			if (!p.IsFlagSet(OF_HIDDEN))
+				p.SetFlag(OF_HIDDEN);
+			p.SetResistance(INJUREREASON_UNKNOWN, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_ATOM, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_CHEM, 100000.0f);
+			p.SetResistance(INJUREREASON_CONTAM_BIO, 100000.0f);			
+		}
+		if (childID == 2 || childID == 3)
+		{
+			Vehicle v(Target);
+			if(!v.IsInstalled())
+			{
+				int UnitID = v.GetID();
+				PersonList list = Game::GetFirefighters();
+				for(int i = 0; i < list.GetNumPersons(); i++)
+				{
+					if (list.GetPerson(i)->GetUserData() == UnitID && list.GetPerson(i)->IsFlagSet(OF_HIDDEN))
+					{
+						Person *n = list.GetPerson(i);
+						n->ClearFlag(OF_HIDDEN);
+						n->SetCommandable(true);
+						n->PushActionSwitchAnim(ACTION_NEWLIST, "idle");
+						if (p.IsSelected())
+							n->Select();
+						n->EnableAutoTarget(true);
+						n->SetResistance(INJUREREASON_UNKNOWN, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_ATOM, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_CHEM, 0.0f);
+						n->SetResistance(INJUREREASON_CONTAM_BIO, 0.0f);
+						v.PushActionDeleteOwner(ACTION_NEWLIST);
+						p.PushActionDeleteOwner(ACTION_NEWLIST);
+						n->SetUserData(0);
+						if (childID == 3)
+							n->PushActionExecuteCommand(ACTION_APPEND, "RemoveFirehose", n, 3, false);						
+					} else
+						v.PushActionDeleteOwner(ACTION_NEWLIST);
+				}
+			}
+			else if (childID == 3)
+			{
+				int UnitID = v.GetID();
+				PersonList list = Game::GetFirefighters();
+				for(int i = 0; i < list.GetNumPersons(); i++)
+				{
+					if (list.GetPerson(i)->GetUserData() == UnitID && list.GetPerson(i)->IsFlagSet(OF_HIDDEN))
+					{
+						Person *n = list.GetPerson(i);
+						GameObject hydrant = n->GetHydrant();
+						Vehicle v(&hydrant);
+						p.PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+					}
+				}
+			} else
+				return;
+		}
+	}
+};

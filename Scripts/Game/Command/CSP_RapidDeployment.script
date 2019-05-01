@@ -1,0 +1,489 @@
+const char PROTO_WATER_TANKER[]		= "mod:Prototypes/Vehicles/Fire Department/ccgc.e4p";
+const char HINT_NONEARWATER[]		= "Aucun poteau incendie a proximite pour installer la ligne d'approvisionnement!";
+
+object VcmdRapidDeployment : CommandScript
+{
+	int MAXCONNECTORS;
+	VcmdRapidDeployment()
+	{
+		SetIcon("attachfirehose");
+		SetCursor("attachfirehose");
+ 		SetGroupID(29);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetPriority(90);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() != VT_FIREFIGHTERS_GTF && v.GetVehicleType() != VT_FIREFIGHTERS_DLK)
+				return false;				
+			if ((v.GetVehicleType() == VT_FIREFIGHTERS_GTF || v.GetVehicleType() == VT_FIREFIGHTERS_DLK) && v.GetNumPassengers() > 0 && !v.IsInstalled())
+				return true;
+			else if ((v.GetVehicleType() == VT_FIREFIGHTERS_GTF || v.GetVehicleType() == VT_FIREFIGHTERS_DLK) && v.IsInstalled())
+				return true;
+			else if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && (v.IsInstalled() || (v.GetNumPassengers() > 0 && !v.IsInstalled()) ||  (!v.IsInstalled() && v.HasCommand("DummyWaterSupplyOn"))))
+				return true;				
+		}
+		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF || v.GetVehicleType() == VT_FIREFIGHTERS_DLK)
+			{
+				if (v.IsInstalled() || (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && v.HasCommand("DummyWaterSupplyOn")))
+				{
+					SetIcon("removefirehose");
+					SetCursor("removefirehose");
+				}
+				else
+				{
+					SetIcon("attachfirehose");
+					SetCursor("attachfirehose");
+				}
+				return true;
+			}
+		}
+		return false;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 99)
+		{
+			Vehicle v(Target);
+			if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && v.HasCommand("DummyWaterSupplyOn"))
+			{
+				Person p(Caller);
+				if (p.GetEquipment() == EQUIP_FIREHOSE)
+					p.SetEquipment(EQUIP_NONE);
+				p.PushActionWait(ACTION_NEWLIST, 0.5f);
+				p.PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 4, false);
+			}
+			return;
+		}
+
+		Vehicle v(Caller);
+		v.PushActionWait(ACTION_NEWLIST, 0.1f);
+
+		//	RAPID DEPLOY FOR WATER TANKER
+		if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && !v.IsInstalled() && !v.HasCommand("DummyWaterSupplyOn"))
+		{
+			bool NearbyHydrantFound = false;
+			bool NearbyEngineFound = false;	
+			Vector CmdPos = v.GetPosition();
+			Vehicle *engine = NULL;
+			float bestEngine = 0.;
+			VehicleList l2(VT_FIREFIGHTERS_GTF, VT_FIREFIGHTERS_GTF);
+			for(int j = 0; j < l2.GetNumVehicles(); j++)
+			{
+				Vehicle *obj = l2.GetVehicle(j);
+				if (!NearbyEngineFound && obj->GetBoundingRadiusDistXYToObject(&v) < 650.f && StrCompare(obj->GetPrototypeFileName(), PROTO_WATER_TANKER) != 0 && obj->IsChildEnabled("water_supply") && !obj->HasCommand("DummyWaterSupplyOn") && !obj->HasCommand("DummyWaterSupplyFromTankerOn"))
+				{
+					float distCurrEng = Math::dist(CmdPos.x, CmdPos.y, obj->GetPosition().x, obj->GetPosition().y);
+					if (distCurrEng < bestEngine || bestEngine == 0.) 
+					{
+						engine = obj;
+						bestEngine = distCurrEng;
+					}
+				}
+			}
+			if (engine)
+				NearbyEngineFound = true;
+			if (!NearbyEngineFound || !engine)
+			{
+				Game::ShowHelpTextWindow("Pas d'engin compatible a alimenter !", 2.f);
+				return;
+			}
+			if (v.IsChildEnabled("water_supply") && !v.HasCommand("DummyWaterSupplyOn") && !v.HasCommand("DummyWaterSupplyFromTankerOn"))
+			{
+				GameObject *hydrant = NULL;
+				float bestHydrant = 0.;
+				GameObjectList l3 = v.GetObjectsInRange(500.f, ACTOR_OBJECT);
+				for(int k = 0; k < l3.GetNumObjects(); k++)
+				{
+					GameObject *Obj = l3.GetObject(k);
+					if (!NearbyHydrantFound && Obj->IsHydrant() && !Obj->IsHydrantInUse())
+					{
+						float distCurrHyd = Math::dist(CmdPos.x, CmdPos.y, Obj->GetPosition().x, Obj->GetPosition().y);
+						if (distCurrHyd < bestHydrant || bestHydrant == 0.) 
+						{
+							hydrant = Obj;
+							bestHydrant = distCurrHyd;
+						}
+					}
+				}
+				if (hydrant)
+					NearbyHydrantFound = true;
+				if (!NearbyHydrantFound || !hydrant)
+					Game::ShowHelpTextWindow("Pas de poteau d'incendie pour alimenter le CCGC en eau, le vehicule puise sur ses reserves !", 2.f);
+			}
+			int Pcnt = 0;
+			PersonList l1 = v.GetPassengers();
+			if (l1.GetNumPersons() > 0)
+			{
+				for(int i = 0; i < l1.GetNumPersons(); i++)
+				{
+					if (NearbyHydrantFound)
+						MAXCONNECTORS = 2;
+					else
+						MAXCONNECTORS = 1;
+					if (Pcnt < MAXCONNECTORS)
+					{
+						if (l1.GetPerson(i)->HasCommand("AttachFireHose"))
+						{
+							Person *p = l1.GetPerson(i);
+							p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+							if(p->GetEquipment() != EQUIP_FIREHOSE)
+							{
+								p->PushActionMove(ACTION_APPEND, &v, TARGET_EQUIPMENTDOOR);
+								p->PushActionTurnTo(ACTION_APPEND, &v);
+								p->PushActionGetEquipment(ACTION_APPEND, &v, EQUIP_FIREHOSE);
+							}
+							if (NearbyHydrantFound && Pcnt == 0)
+							{
+								p->PushActionMove(ACTION_APPEND, hydrant, TARGET_FREE_CONNECTOR);
+								p->PushActionUseEquipment(ACTION_APPEND, hydrant, childID, 1.0f);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 0, false);
+							} 
+							else 
+							{
+								p->PushActionMove(ACTION_NEWLIST, &v, TARGET_FREE_CONNECTOR);
+								p->PushActionCheckFreeConnector(ACTION_APPEND, &v);
+								p->PushActionUseEquipment(ACTION_APPEND, &v, childID, 1.0f);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", engine, 0, false);
+								p->PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+							}
+							Pcnt++;
+						}
+					}
+				}
+			}
+		}
+
+		//	RAPID UNDEPLOY FOR WATER TANKER
+		else if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && (v.IsInstalled() || v.HasCommand("DummyWaterSupplyFromTankerOn") || v.HasCommand("DummyWaterSupplyOn")))
+		{
+			if (v.IsInstalled() && !v.HasCommand("DummyWaterSupplyFromTankerOn"))
+			{
+				PersonList l2(ROLE_SQUAD);
+				for(int i = 0; i < l2.GetNumPersons(); i++)
+				{
+					if (l2.GetPerson(i)->GetEquipment() == EQUIP_FIREHOSE && l2.GetPerson(i)->GetType() == ACTOR_PERSON && l2.GetPerson(i)->GetFirehoseID() != 0 && !l2.GetPerson(i)->IsFlagSet(OF_HIDDEN))
+					{
+						Vector TargetPos;
+						GameObject Phydrant = l2.GetPerson(i)->GetHydrant();
+						if (Phydrant.GetID() == v.GetID())
+						{
+							Person p(l2.GetPerson(i));
+							if (!v.GetUsedConnectorPosition(&p, TargetPos))
+								return;
+							else
+							{
+								p.PushActionMoveWithHose(ACTION_NEWLIST, TargetPos);
+								p.PushActionUseEquipment(ACTION_APPEND, &Phydrant, childID, 10.0f);
+								if (!p.IsCommandEnabled("Extinguish"))
+									p.PushActionExecuteCommand(ACTION_APPEND, "RemoveFirehose", &Phydrant, 99, false);
+								p.PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+							}
+						}
+					}
+				}
+				return;
+			}
+			bool NearbyFirefighterFound = false;
+			Person *p = NULL;
+			float bestPerson = 0.;
+			Vector CmdPos = v.GetPosition();
+			PersonList l1 = Game::GetFirefighters();
+			for (int i = 0; i < l1.GetNumPersons(); i++)
+			{
+				Person *Obj = l1.GetPerson(i);
+				if (!NearbyFirefighterFound && Obj->GetBoundingRadiusDistXYToObject(&v) < 1200.f && Obj->GetEquipment() == EQUIP_NONE && !Obj->IsInDLKBasket() && !Obj->IsFlagSet(OF_HIDDEN) && Obj->GetEnteredCarID() == -1 && !Obj->IsLinkedWithPerson() && !Obj->IsCarryingPerson() && !Obj->IsContaminated() && !Obj->IsInjured() && !Obj->IsDead() && !Obj->IsPulling() && Obj->GetEnteredHouseID() == -1 && Obj->HasCommand("AttachFireHose") && Obj->HasCommand("RemoveFireHose") && !Obj->HasCommand("VcmdCannonSwitch") && !Obj->HasCommand("DummyPumpEnabled") && !Obj->IsCurrentAnimation("useextinguis")))
+				{
+					float distCurrPer = Math::dist(CmdPos.x, CmdPos.y, Obj->GetPosition().x, Obj->GetPosition().y);
+					if (distCurrPer < bestPerson || bestPerson == 0.) 
+					{
+						p = Obj;
+						bestPerson = distCurrPer;
+					}
+				}
+			}
+			if (p)
+			{
+				NearbyFirefighterFound = true;
+				bool ConnectedToHydrant = false;
+				if (v.HasCommand("DummyWaterSupplyOn"))
+					ConnectedToHydrant = true;
+				bool ConnectedToEngine = false;
+				if (v.HasCommand("DummyWaterSupplyFromTankerOn"))
+				{
+					ConnectedToEngine = true;
+					Vehicle engine;
+					PersonList l2 = Game::GetFirefighters();
+					for(int i = 0; i < l2.GetNumPersons(); i++)
+					{
+						if (l2.GetPerson(i)->GetEquipment() == EQUIP_FIREHOSE && l2.GetPerson(i)->GetFirehoseID() != 0 && l2.GetPerson(i)->IsFlagSet(OF_HIDDEN) && l2.GetPerson(i)->HasCommand("DummyWaterSupplyFromTankerOn"))
+						{
+							GameObject Phydrant = l2.GetPerson(i)->GetHydrant();
+							if (Phydrant.GetID() == v.GetID())
+							{
+								Person n(l2.GetPerson(i));
+								GameObjectList l3 = n.GetObjectsInRange(800.0f, ACTOR_VEHICLE);
+								for(int k = 0; k < l3.GetNumObjects(); k++)
+								{
+									if (l3.GetObject(k)->GetType() == ACTOR_VEHICLE)
+									{
+										if (n.GetUserData() == l3.GetObject(k)->GetID())
+											engine = l3.GetObject(k);
+									}
+								}
+							}
+						}
+					}
+					if (engine.IsValid() && ConnectedToEngine)
+					{
+						p->AssignCommand("VcmdRapidDeployment");
+						p->PushActionExecuteCommand(ACTION_NEWLIST, "RemoveFireHose", &engine, 0, false);
+						return;
+					}
+				}
+			}
+			else if (!NearbyFirefighterFound || !p)
+				Game::ShowHelpTextWindow("Pas de pompier à proximite pour debrancher le CCGC!", 2.f);
+		}
+
+		//	RAPID DEPLOY FOR FIRE ENGINES / GTF VEHICLETYPES
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && !v.IsInstalled() && StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0)
+		{
+			bool NearbyHydrantFound = false;
+			if (v.IsChildEnabled("water_supply") && !v.HasCommand("DummyWaterSupplyOn") && !v.HasCommand("DummyWaterSupplyFromTankerOn"))
+			{
+				Vector CmdPos = v.GetPosition();
+				GameObject *hydrant = NULL;
+				float bestHydrant = 0.;
+				GameObjectList l3 = v.GetObjectsInRange(600.f, ACTOR_OBJECT);
+				for(int k = 0; k < l3.GetNumObjects(); k++)
+				{
+					GameObject *Obj = l3.GetObject(k);
+					if (!NearbyHydrantFound && Obj->IsHydrant() && !Obj->IsHydrantInUse())
+					{
+						float distCurrHyd = Math::dist(CmdPos.x, CmdPos.y, Obj->GetPosition().x, Obj->GetPosition().y);
+						if (distCurrHyd < bestHydrant || bestHydrant == 0.) 
+						{
+							hydrant = Obj;
+							bestHydrant = distCurrHyd;
+						}
+					}
+				}
+				if (hydrant)
+					NearbyHydrantFound = true;
+				if (!NearbyHydrantFound || !hydrant)
+					Game::ShowHelpTextWindow(HINT_NONEARWATER, 2.f);
+			}
+			bool EnablePumps = false;
+			if (v.IsChildEnabled("pump_controller") && v.HasCommand("VcmdPumpSwitch") && !v.HasCommand("DummyPumpEnabled"))
+				EnablePumps = true;
+			bool InstallCannon = false;
+			if (v.HasCommand("VcmdCannonSwitch") && !v.IsCurrentAnimation("activate") && (Input::LShiftPressed() || Input::RShiftPressed()))
+				InstallCannon = true;
+			int Pcnt = 0;
+			PersonList l1 = v.GetPassengers();
+			if (l1.GetNumPersons() > 0)
+			{
+				for(int i = 0; i < l1.GetNumPersons(); i++)
+				{
+					MAXCONNECTORS = 4;
+					if (EnablePumps)
+					{
+						EnablePumps = false;
+						v.PushActionExecuteCommand(ACTION_APPEND, "VcmdPumpSwitch", &v, 0, false);
+					}
+					else if (InstallCannon)
+					{
+						InstallCannon = false;
+						v.PushActionWait(ACTION_APPEND, 1.5f);
+						v.PushActionExecuteCommand(ACTION_APPEND, "VcmdCannonSwitch", Caller, 0, false);
+					}
+					else if (Pcnt < MAXCONNECTORS)
+					{
+						if (l1.GetPerson(i)->HasCommand("AttachFireHose"))
+						{
+							Person *p = l1.GetPerson(i);
+							p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+							if(p->GetEquipment() != EQUIP_FIREHOSE)
+							{
+								p->PushActionMove(ACTION_APPEND, &v, TARGET_EQUIPMENTDOOR);
+								p->PushActionTurnTo(ACTION_APPEND, &v);
+								p->PushActionGetEquipment(ACTION_APPEND, &v, EQUIP_FIREHOSE);
+							}
+							if (NearbyHydrantFound && Pcnt == 0)
+							{
+								p->PushActionMove(ACTION_APPEND, hydrant, TARGET_FREE_CONNECTOR);
+								p->PushActionUseEquipment(ACTION_APPEND, hydrant, childID, 1.0f);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 3, false);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 0, false);
+							} else
+							{
+								p->PushActionMove(ACTION_NEWLIST, &v, TARGET_FREE_CONNECTOR);
+								p->PushActionCheckFreeConnector(ACTION_APPEND, &v);
+								p->PushActionUseEquipment(ACTION_APPEND, &v, childID, 1.0f);
+							}
+							Pcnt++;
+						}
+					}
+				}
+			}
+		}
+
+		//	RAPID UNDEPLOY FOR FIRE ENGINES / GTF VEHICLETYPES
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_GTF && v.IsInstalled() && StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0)
+		{
+			bool SupplyLineInstalled = false;
+			if (v.HasCommand("DummyWaterSupplyOn"))
+				SupplyLineInstalled = true;
+			PersonList l2(ROLE_SQUAD);
+			for(int i = 0; i < l2.GetNumPersons(); i++)
+			{
+				if (l2.GetPerson(i)->GetEquipment() == EQUIP_FIREHOSE && l2.GetPerson(i)->GetType() == ACTOR_PERSON && l2.GetPerson(i)->GetFirehoseID() != 0 && !l2.GetPerson(i)->IsFlagSet(OF_HIDDEN))
+				{
+					Vector TargetPos;
+					GameObject Phydrant = l2.GetPerson(i)->GetHydrant();
+					if (Phydrant.GetID() == v.GetID() || ((Phydrant.HasName("extend_wye") || Phydrant.HasName("extend_hose")) && Phydrant.GetUserData() == v.GetID()))
+					{
+						Person p(l2.GetPerson(i));
+						if (Phydrant.HasName("extend_wye") || Phydrant.HasName("extend_hose"))
+						{
+							p.PushActionExecuteCommand(ACTION_NEWLIST, "RemoveFirehose", &Phydrant, 2, false);
+						} else
+						{
+							if (!v.GetUsedConnectorPosition(&p, TargetPos))
+								return;
+							else
+							{
+								p.PushActionMoveWithHose(ACTION_NEWLIST, TargetPos);
+								p.PushActionUseEquipment(ACTION_APPEND, &Phydrant, childID, 10.0f);
+								if (!p.IsCommandEnabled("Extinguish"))
+									p.PushActionExecuteCommand(ACTION_APPEND, "RemoveFirehose", &Phydrant, 99, false);
+								if (SupplyLineInstalled)
+								{
+									SupplyLineInstalled = false;
+									p.PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 4, false);	
+								}
+								p.PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+							}
+						}
+					}
+				}
+			}
+			if (v.HasCommand("VcmdCannonSwitch") && v.IsCurrentAnimation("activate"))
+				v.PushActionExecuteCommand(ACTION_APPEND, "VcmdCannonSwitch", &v, 0, false);
+			if (v.HasChild("pump_controller") && v.HasCommand("DummyPumpEnabled"))
+				v.PushActionExecuteCommand(ACTION_APPEND, "VcmdPumpSwitch", &v, 0, false);			
+		}
+
+		//	RAPID DEPLOY FOR LADDER VEHICLES
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && !v.IsInstalled())
+		{
+			bool NearbyHydrantFound = false;
+			v.PushActionInstall(ACTION_APPEND, Target);
+			if (v.IsChildEnabled("water_supply") && !v.HasCommand("DummyWaterSupplyOn") && !v.HasCommand("DummyWaterSupplyFromTankerOn"))
+			{
+				Vector CmdPos = v.GetPosition();
+				GameObject *hydrant = NULL;
+				float bestHydrant = 0.;
+				GameObjectList l4 = v.GetObjectsInRange(400.f, ACTOR_OBJECT);
+				for(int k = 0; k < l4.GetNumObjects(); k++)
+				{
+					GameObject *Obj = l4.GetObject(k);
+					if (!NearbyHydrantFound && Obj->IsHydrant() && !Obj->IsHydrantInUse())
+					{
+						float distCurrHyd = Math::dist(CmdPos.x, CmdPos.y, Obj->GetPosition().x, Obj->GetPosition().y);
+						if (distCurrHyd < bestHydrant || bestHydrant == 0.) 
+						{
+							hydrant = Obj;
+							bestHydrant = distCurrHyd;
+						}
+					}
+				}
+				if (hydrant)
+					NearbyHydrantFound = true;
+				if (!NearbyHydrantFound || !hydrant)
+					Game::ShowHelpTextWindow(HINT_NONEARWATER, 2.f);
+			}
+			int Pcnt = 0;
+			int NumPass = v.GetNumPassengers();
+			PersonList l1 = v.GetPassengers();
+			if (l1.GetNumPersons() > 0)
+			{
+				for(int i = 0; i < l1.GetNumPersons(); i++)
+				{
+					if (Pcnt < NumPass)
+					{
+						if (l1.GetPerson(i)->HasCommand("AttachFireHose"))
+						{
+							Person *p = l1.GetPerson(i);
+							if (Pcnt == 0 && NearbyHydrantFound)
+							{	
+								p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+								p->PushActionMove(ACTION_APPEND, &v, TARGET_EQUIPMENTDOOR);
+								p->PushActionTurnTo(ACTION_APPEND, &v);
+								p->PushActionGetEquipment(ACTION_APPEND, &v, EQUIP_FIREHOSE);
+								p->PushActionMove(ACTION_APPEND, hydrant, TARGET_FREE_CONNECTOR);
+								p->PushActionUseEquipment(ACTION_APPEND, hydrant, childID, 1.0f);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 3, false);
+								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 0, false);
+								p->PushActionExecuteCommand(ACTION_APPEND, "EnterBasket", &v, 0, false);
+							}	
+							else if (Pcnt == 0 && !NearbyHydrantFound)
+							{
+								Game::ShowHelpTextWindow(HINT_NONEARWATER, 2.f);
+							} 
+							Pcnt++;
+						}
+					}
+				}
+			}
+		}
+
+		//	RAPID UNDEPLOY FOR LADDER VEHICLES
+		else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && v.IsInstalled())
+		{
+			bool SupplyLineInstalled = false;
+			bool BasketGuyFound = false;
+			if (v.HasCommand("DummyWaterSupplyOn"))
+				SupplyLineInstalled = true;
+			PersonList l1(ROLE_SQUAD);
+			for(int i = 0; i < l1.GetNumPersons(); i++)
+			{
+				if (!BasketGuyFound && l1.GetPerson(i)->CanUseDLKCannon() && l1.GetPerson(i)->GetEnteredCarID() == v.GetID())
+				{
+					BasketGuyFound = true;
+					Person p(l1.GetPerson(i));
+					Vector Pos = Game::GetCommandPos();
+					p.PushActionBasketDown(ACTION_NEWLIST, Pos);
+					if (SupplyLineInstalled)
+					{
+						SupplyLineInstalled = false;
+						p.PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 4, false);
+					}
+					p.PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+				}
+			}
+			if (BasketGuyFound)
+				v.PushActionWait(ACTION_APPEND, 3.0f);
+			v.PushActionDeinstall(ACTION_APPEND);
+		}
+	}
+};

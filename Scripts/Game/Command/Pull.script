@@ -1,0 +1,82 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Easter egg
+//
+//		By Hoppah
+//
+//******************************************************************************************
+
+object Pull: CommandScript
+{
+	Pull()
+	{
+		SetIcon("liftwithcrane");
+		SetCursor("liftwithcrane");
+		SetValidTargets(ACTOR_OBJECT);
+		SetRestrictions(RESTRICT_PULLABLE);
+		
+		SetGroupID(CGROUP_PULLING);
+		SetGroupLeader(true);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_OBJECTS_PULLABLE);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		return !p.IsPulling();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->IsEquipped())
+			return false;
+
+		Person p(Caller);
+		if(!p.IsValid() || p.IsPulling() || p.IsEquipped() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.GetEnteredCarID() != -1)
+			return false;
+		//return Game::ExistsObjectWithFlagSet(OF_PULLABLE);
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->IsEquipped() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+			
+		Person p(Caller);
+		if(!p.IsValid() || p.IsPulling() || p.IsEquipped() || p.IsCarryingPerson() || p.IsLinkedWithPerson() || p.GetEnteredCarID() != -1)
+			return false;
+			
+		GameObject obj(Target);
+		if(obj.IsValid() && !obj.IsCarried()) 
+			return true;
+			
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 0)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_OBJECTSURFACE);
+			Caller->PushActionPull(ACTION_APPEND, Target);
+			GameObject obj(Target);
+			if(StrCompare(obj.GetPrototypeFileName(), "mod:Prototypes/Objects/06 LA Misc/goldbar.e4p") == 0 && obj.GetUserData() == 0)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "Pull", &obj, 1, false);
+		}
+		if (childID == 1)
+		{
+			GameObject obj(Target);
+			//Target->PushActionDeleteOwner(ACTION_NEWLIST);
+			obj.SetUserData(1);
+			int Money = Mission::GetMoneyLeft();
+			int NewMoney = Money + 20000;
+			Mission::SetMoney(NewMoney);
+			Mission::PlayHint("You have found Hoppah's gold! You have received a subsidy of 20.000 credits!");
+		}
+	}
+};

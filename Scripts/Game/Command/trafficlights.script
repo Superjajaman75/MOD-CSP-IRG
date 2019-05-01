@@ -1,0 +1,112 @@
+//******************************************************************************************
+// #Version 1.0#
+//
+// 		Includes: Trafficlight commands.
+//
+//	- TcmdRed
+//	- TcmdAuto
+//
+//		original script by Dion
+//		Modified by gamesbond
+//		
+//
+//******************************************************************************************
+
+const char VOSET_ROAD[]				= "Freely Accessible";
+const char VOSET_BARRICADE[]		= "Barricade";
+const char NAME_FS_TRAFFIC[]		= "trafficlight";
+const char CMD_TRED[]				= "TcmdRed";
+const char CMD_TAUTO[]				= "TcmdAuto";
+const char VO_LIGHT[]				= "trafficVO";
+
+object TcmdRed : CommandScript
+{
+	TcmdRed()
+	{
+		SetCursor("lighton");
+		SetIcon("feurouge");
+		SetPriority(200);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (!Game::IsFreeplay() && !Game::IsMultiplayer())
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ActorList volight = Game::GetActors(VO_LIGHT); 
+		Person p(Caller);		
+		GameObjectList fsl = Game::GetGameObjects(NAME_FS_TRAFFIC); 
+		for(int i=0; i < fsl.GetNumObjects(); i++)
+		{
+			Actor *volighta = volight.GetActor(i);
+			GameObject *obj = fsl.GetObject(i);			
+			obj->EnableTrafficLight(TLT_RED);
+			volighta->SetVirtualObjectTerrain(VOSET_BARRICADE);
+			//p.RemoveCommand(CMD_TRED);
+			//p.AssignCommand(CMD_TAUTO);	
+			p.PushActionWait(ACTION_NEWLIST, 25.f);
+			p.PushActionExecuteCommand(ACTION_APPEND, CMD_TAUTO, &p, 0, false);
+		}	
+	}
+};
+
+object TcmdAuto : CommandScript
+{
+	TcmdAuto()
+	{
+		SetCursor("lightoff");
+		SetIcon("feuvert");
+		SetPriority(199);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (!Game::IsFreeplay() && !Game::IsMultiplayer())
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ActorList volight = Game::GetActors(VO_LIGHT); 
+		Person p(Caller);		
+		GameObjectList fsl = Game::GetGameObjects(NAME_FS_TRAFFIC); 
+		for(int i=0; i < fsl.GetNumObjects(); i++)
+		{
+			Actor *volighta = volight.GetActor(i);
+			GameObject *obj = fsl.GetObject(i);			
+			obj->EnableTrafficLight(TLT_GREEN);
+			volighta->SetVirtualObjectTerrain(VOSET_ROAD);
+			//p.RemoveCommand(CMD_TAUTO);
+			//p.AssignCommand(CMD_TRED);				
+		}		
+	}
+};

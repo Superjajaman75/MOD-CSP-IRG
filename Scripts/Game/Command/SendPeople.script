@@ -1,0 +1,40 @@
+object SendPeople : CommandScript
+{
+       	MoveResult mr;
+
+	SendPeople()
+	{
+		SetValidTargets(ACTOR_FLOOR|ACTOR_OBJECT);
+		SetHighlightingEnabled(false);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if(p.IsValid() && (!p.IsEquipped() || p.GetEquipment() == EQUIP_REDIRECTSIGN) && !p.IsLinkedWithPerson() && p.GetEnteredCarID() == -1)
+			return true;
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Target->GetID() == Caller->GetID())
+			return false;
+		mr = Commands::CheckMoveConditions(Caller, Target, childID);
+		if(mr.Mode == MOVE_ABORT)
+			return false;
+
+		Person p(Caller);
+		if(p.IsValid() && (!p.IsEquipped() || p.GetEquipment() == EQUIP_REDIRECTSIGN) && !p.IsLinkedWithPerson() && p.GetEnteredCarID() == -1 && p.IsCommandInRange(800.f))
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionSendPeople(ACTION_NEWLIST, 250.f, Game::GetCommandPos());
+	}
+};

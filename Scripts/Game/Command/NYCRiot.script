@@ -1,0 +1,384 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+//
+//	- PcmdFormLine
+//	- PcmdAdvance
+//	- VcmdDeployFront
+//	- DummyRiot
+//
+//		Script by Hoppah, modified by Superjajaman75 for MOD CSP-IRG
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_AUTOSIREN_OFF[]		= "VcmdAutoSirenOff";
+const char DUMMY_HASSIREN[] 		= "DummyHasSiren";
+const char DUMMY_DISABLE[] 			= "DummyDisableSiren";
+const char DUMMY_RIOT[]				= "DummyRiot";
+const char PROTO_IVECO[]			= "mod:Prototypes/Vehicles/Police/Ivecogendarmerie.e4p";
+const char PROTO_TRANSITCRS[]		= "mod:Prototypes/Vehicles/Police/TRANSIT_crs.e4p";
+const char PROTO_MASTERCRS[]		= "mod:Prototypes/Vehicles/Police/Master_CRS.e4p";
+const char OBJ_BARRICADE[] 			= "mod:Prototypes/Vehicles/Police/barriere.e4p";
+const float DIST					= 74.0f;		//Ecart entre policiers dans la ligne
+const float DIST_VEHICLE			= 245.0f;		//Distance à laquelle les policiers vont devant le veh
+const float DIST_FW					= 175.0f;		//Distance à laquelle les policiers avancent avec la commande advance
+const float DIST_BARRICADE_GM		= 205.0f;
+const float DIST_BARRICADE_TRANSIT	= 175.0f;
+const float DIST_BARRICADE_MASTER	= 200.0f;
+const int MAX_SELECT 				= 11;
+
+
+object PcmdFormLine : CommandScript
+{
+	PcmdFormLine()
+	{
+    	SetIcon("formline");
+    	SetCursor("formline");
+		SetValidTargets(ACTOR_PERSON);
+		SetRestrictions(RESTRICT_NOTINJURED | RESTRICT_NOTARRESTED | RESTRICT_NOTLINKED);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_NONIJURED_PERSON);
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		if(!Caller->HasCommand("PcmdFormLine"))
+			return false;
+		GameObjectList l1 = Game::GetSelectedGameObjects();
+		if (l1.GetNumObjects() > MAX_SELECT)
+			return false;
+		Person p(Caller);
+		if (!p.HasCommand("PcmdFormLine") || p.IsLinkedWithPerson() || p.IsInHouseWithGroundEntrance())
+			return false;	
+		for(int i=0; i<l1.GetNumObjects(); i++)
+		{
+			if (l1.GetObject(i)->GetType() == ACTOR_PERSON)
+			{
+				Person t(l1.GetObject(i));
+				if (!t.HasCommand("PcmdFormLine") || t.IsLinkedWithPerson() || t.IsInHouseWithGroundEntrance())
+					return false;
+			}
+		}
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() ||  Caller->IsEquipped() || !Target->IsValid() || Target->GetID() == Caller->GetID() )
+			return false;
+		
+		if (Target->GetType() == ACTOR_PERSON)
+		{	
+			Person to(Target);
+			if (!to.HasCommand("PcmdFormLine"))
+				return false;
+		}
+		
+		GameObjectList l1 = Game::GetSelectedGameObjects();
+		if (l1.GetNumObjects() > MAX_SELECT)
+			return false;
+			
+		for(int i=0; i<l1.GetNumObjects(); i++)
+		{
+			if (l1.GetObject(i)->GetType() == ACTOR_PERSON)
+			{
+				Person t(l1.GetObject(i));
+				if (!t.HasCommand("PcmdFormLine") || t.IsLinkedWithPerson() || t.IsInHouseWithGroundEntrance())
+					return false;
+			}
+		}					
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(childID == 0)
+		{
+			int Pcnt = 0;
+			GameObjectList l1 = Game::GetSelectedGameObjects();
+			for(int i=0; i<l1.GetNumObjects(); i++)
+			{
+				if (Pcnt < MAX_SELECT)
+				{
+					if (l1.GetObject(i)->GetType() == ACTOR_PERSON)
+					{
+						//Person t(l1.GetObject(i));
+						
+						Person p(Target);
+						Vector Pos = p.GetPosition();						
+							float r[9];
+							float childr[9];
+						p.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+						float dx = 0.f, dz = 0.f;
+						float dy;
+						if (Pcnt == 0)			dy = DIST;
+						else if (Pcnt == 1)		dy = -DIST;
+						else if (Pcnt == 2)		dy = 2*DIST;
+						else if (Pcnt == 3)		dy = 2*-DIST;
+						else if (Pcnt == 4)		dy = 3*DIST;
+						else if (Pcnt == 5)		dy = 3*-DIST;
+						else if (Pcnt == 6)		dy = 4*DIST;
+						else if (Pcnt == 7)		dy = 4*-DIST;
+						else if (Pcnt == 8)		dy = 5*DIST;
+						else if (Pcnt == 9)		dy = 5*-DIST;
+						else if (Pcnt == 10)	dy = 6*DIST;
+						else if (Pcnt == 11)	dy = 6*-DIST;							
+						if (Pcnt < MAX_SELECT)	Pcnt++;	
+						Math::RotateVector(dx, dy, dz, r);
+						Pos = Pos + Vector(dx, dy, dz);
+						l1.GetObject(i)->PushActionMove(ACTION_APPEND, Pos);
+						l1.GetObject(i)->PushActionMove(ACTION_APPEND, Pos);
+						l1.GetObject(i)->PushActionExecuteCommand(ACTION_APPEND, "PcmdFormLine", &p, 1, false);						
+					}
+				}
+			}	
+		}
+		if(childID == 1)
+		{
+			Person p(Caller);
+			Person t(Target);
+			if (!p.HasCommand(DUMMY_RIOT)) 
+				p.AssignCommand(DUMMY_RIOT);
+			if (!t.HasCommand(DUMMY_RIOT)) 
+				t.AssignCommand(DUMMY_RIOT);
+				float r[9];
+			t.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			p.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);		
+		}
+	}
+};
+
+object PcmdAdvance : CommandScript
+{
+	
+	PcmdAdvance()
+	{
+    	SetIcon("advance");
+    	SetCursor("Moveto");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetDeselectCaller(false);
+		SetValidTargets(ACTOR_PERSON);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		if(!Caller->HasCommand(DUMMY_RIOT))
+			return false;
+		GameObjectList l1 = Game::GetSelectedGameObjects();
+		if (l1.GetNumObjects() != 1)
+			return false;			
+		return true;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+			
+		GameObjectList l1 = Game::GetSelectedGameObjects();
+		if (l1.GetNumObjects() != 1)
+			return false;	
+
+		if (Caller->GetObjectType()==TYPE_PERSON)
+		{
+			Person p(Caller);
+			if (p.GetEnteredCarID() != -1)
+				return false;				
+			if(!p.HasCommand(DUMMY_RIOT))
+				return false;				
+			return true;
+		}
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Vector Pos = p.GetPosition();
+			float r[9];
+		p.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+		float tx = DIST_FW, tz = 0.f, ty = 0.f;
+		Math::RotateVector(tx, ty, tz, r);
+		Pos = Pos + Vector(tx, ty, tz);
+		p.PushActionMove(ACTION_NEWLIST, Pos);
+		GameObjectList l1 = p.GetObjectsInRange(1000.0f, ACTOR_PERSON);
+		for(int i=0; i<l1.GetNumObjects(); i++)
+		{
+			GameObject *t = l1.GetObject(i);
+			if (t->GetObjectType() == TYPE_PERSON && t->HasCommand("PcmdFormLine") && t->HasCommand("DummyRiot"))
+			{
+				Vector pos2 = t->GetPosition();
+					float r[9];
+				t->GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				float dx = DIST_FW, dz = 0.f, dy = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				pos2 = pos2 + Vector(dx, dy, dz);
+				t->PushActionMove(ACTION_NEWLIST, pos2);
+			}
+		}	
+	}
+};
+
+object VcmdDeployFront : CommandScript
+{
+	
+	VcmdDeployFront()
+	{
+    	SetIcon("deploy_front");
+		SetCursor("EmptyCar");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+	
+	 bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if(v.GetVehicleType() != VT_POLICE_MTW || v.GetNumPassengers() == 0)
+				return false;
+		}
+
+		return true;
+ 	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid())
+			return false;
+		
+		if(Caller->GetType()==ACTOR_VEHICLE && Target->GetType()==ACTOR_VEHICLE && Caller->GetID()==Target->GetID())
+		{
+			Vehicle v(Caller);
+			if (!v.IsValid() ||  v.IsDestroyed())
+			        return false;
+			if(v.GetNumPassengers() > 0)
+				return true;
+		}				
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(childID == 0)
+		{
+			Vehicle v(Caller);
+			v.PushActionWait(ACTION_NEWLIST, 0.1f);
+			if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+				v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_DISABLE, Caller, 2, false);
+				
+			if(v.GetNumPassengers() >= 3)	
+				v.PushActionExecuteCommand(ACTION_APPEND, "VcmdDeployFront", &v, 2, false);				
+				
+			int Pcnt = 0;
+			PersonList l1 = v.GetPassengers();
+			for(int i=0; i<l1.GetNumPersons(); i++)
+			{
+				if (Pcnt < 6)
+				{
+					Person *p = l1.GetPerson(i);
+					if (p->HasCommand("PcmdFormLine"))
+					{
+						p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+						p->PushActionSwitchAnim(ACTION_NEWLIST, "idleequipped2");
+						p->SetResistance(INJUREREASON_SHOT, 999.f);
+						Vector Pos = v.GetPosition();
+							float r[9];
+							float childr[9];
+						v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+						float dx = DIST_VEHICLE, dz = 0.f;
+						float dy;
+						if (Pcnt == 0)			dy = DIST/2;
+						else if (Pcnt == 1)		dy = -DIST/2;
+						else if (Pcnt == 2)		dy = DIST/2+DIST;	
+						else if (Pcnt == 3)		dy = -DIST/2+-DIST;
+						else if (Pcnt == 4)		dy = DIST/2+2*DIST;	
+						else if (Pcnt == 5)		dy = -DIST/2+-2*DIST;
+						if (Pcnt < 6)
+							Pcnt++;
+						Math::RotateVector(dx, dy, dz, r);
+						Pos = Pos + Vector(dx, dy, dz);
+						p->PushActionMove(ACTION_APPEND, Pos);
+						p->PushActionMove(ACTION_APPEND, Pos);
+						p->PushActionExecuteCommand(ACTION_APPEND, "VcmdDeployFront", &v, 1, false);
+						p->AssignCommand(DUMMY_RIOT);						
+					}
+				}
+			}
+		}
+		if(childID == 1)
+		{
+			Person p(Caller);
+			Vehicle v(Target);
+			if (!p.HasCommand(DUMMY_RIOT)) 
+				p.AssignCommand(DUMMY_RIOT);
+				float r[9];
+			v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			p.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);						
+		}
+		if(childID == 2)
+		{
+			Vehicle v(Caller);
+			Vehicle b1 = Game::CreateVehicle(OBJ_BARRICADE, "bar1");
+			if (b1.IsValid())
+			{
+				Vector Pos = Caller->GetPosition();
+					float r[9];
+					float childr[9];
+				Caller->GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				float dx;
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_IVECO) == 0)
+					dx = DIST_BARRICADE_GM;
+				else if (StrCompare(v.GetPrototypeFileName(), PROTO_TRANSITCRS) == 0)
+					dx = DIST_BARRICADE_TRANSIT;
+				else if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTERCRS) == 0)
+					dx = DIST_BARRICADE_MASTER;
+				float dy = 0.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::MultiplyMatrices(childr, r);
+				Pos = Pos + Vector(dx, dy, 0);
+				b1.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				b1.SetPosition(Pos);
+				b1.UpdatePlacement();
+				b1.SetPlayerMP(v.GetPlayerMP());
+				b1.PushActionHalt(ACTION_NEWLIST, 500, HALT_PERSONS);
+			}
+		}
+	}
+};
+
+object DummyRiot : CommandScript
+{
+	DummyRiot()
+	{
+		SetGroupID(21);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(childID == 0)
+		{
+			GameObject t(Target);
+			t.PushActionDeleteOwner(ACTION_NEWLIST);
+		}
+	}
+};

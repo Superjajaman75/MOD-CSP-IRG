@@ -1,0 +1,299 @@
+//******************************************************************************************
+// #Version 1.3#
+//
+// 		Includes: Hospital command for ambulances.
+//
+//	- VcmdToHospital
+//	- DummyAtHospital
+//	- DummyGoHome
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_SIREN[]					= "VcmdSiren";
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char CMD_WARNINGLIGHTS_OFF[] 		= "VcmdWarningLightsOff";
+const char CMD_WARNINGLIGHTS_ON[] 		= "VcmdWarningLightsOn";
+const char CMD_FLOODLIGHTS_OFF[] 		= "VcmdFloodLightsOff";
+const char CMD_FLOODLIGHTS_ON[] 		= "VcmdFloodLightsOn";
+const char CMD_TOFIRESTATION[] 			= "VcmdToFireStation";
+const char CMD_GOHOME[] 				= "GoHome";
+const char CMD_STANDBY_ON[]				= "VcmdStandbyOn";
+const char CMD_STANDBY_OFF[]			= "VcmdStandbyOff";
+const char DUMMY_DISABLE[] 				= "DummyDisableSiren";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char DUMMY_HOSPITAL[] 			= "DummyAtHospital";
+const char DUMMY_PATROL[] 				= "DummyPatrol";
+const char DUMMY_GOHOME[] 				= "DummyGoHome";
+
+const char OBJ_HELIPAD[] 				= "hospital_helipad"; //objet helipad
+const char VO_ENTRANCE[] 				= "hospital_entrance"; //Entree
+const char VO_ENTRY[] 					= "hospital_entry"; //despawn
+const char VO_ENTRY_HELIPAD[] 			= "hospital_entry2"; //despawn helipad
+const char VO_HELI[] 					= "hospital_heli"; //Vo de l'helipad large
+const char VO_SQUADSAMU[]				= "vo_squad_samu";
+
+const char HINT_NOTRANSPORTS[] 			= "Pas de victime conditionnée dans l'ambulance!";
+const char SND_TOSTATION[]				= "mod:Audio/FX/radio/umh.wav";
+const char SND_TOCHUAR[]				= "mod:Audio/FX/radio/TRS AR.wav";
+const char SND_TOCHUVSAV[]				= "mod:Audio/FX/radio/TRS VSAV.wav";
+const char SND_TOCHUVSAVHR[]			= "mod:Audio/FX/radio/TRS VSAVHR.wav";
+const char SND_TOCHUDRAGON[]			= "mod:Audio/FX/radio/TRS DRAGON 62.wav";
+const char HINT_HELICOPTER[] 			= "Un autre helicoptere est déjà sur l'helistation!";
+const char PROTO_AR1[]					= "mod:Prototypes/Vehicles/Ambulance/ARValenciennes.e4p";
+const char PROTO_AR2[]					= "mod:Prototypes/Vehicles/Ambulance/ARSmur28.e4p";
+const char PROTO_VSAV1[]				= "mod:Prototypes/Vehicles/Fire Department/vsav1master.e4p";
+const char PROTO_VSAV2[]				= "mod:Prototypes/Vehicles/Fire Department/vsavDouai.e4p";
+const char PROTO_VSAV3[]				= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
+const char PROTO_VSAV4[]				= "mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p";
+const char PROTO_VSAVHR[]				= "mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p";
+
+int DummyGroup = 33;
+
+object VcmdToHospital : CommandScript
+{
+	VcmdToHospital()
+	{
+		SetCursor("tohospital");
+		SetIcon("tohospital");
+		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (Game::IsCampaign() && Game::IsMission())
+			return false;
+
+		ActorList l1 = Game::GetActors(VO_ENTRANCE);
+		if (l1.GetNumActors() == 0)
+			return false;
+
+ 		Vehicle v(Caller);
+		if (v.IsCollidingWithVirtualObject(VO_SQUADSAMU))
+			return false;
+		
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+
+ 		Vehicle v(Caller);
+		SetPriority(0);
+		if (v.GetNumTransported() > 0)
+			SetPriority(115);
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		int soundID;
+		if (Game::IsMultiplayer())
+		{
+			int PlayerID = v.GetPlayerMP();
+			v.SetPlayerMP(PlayerID);
+		}
+		if (v.GetVehicleType() == VT_AMBULANCE_RTW) 
+		{
+			ActorList l1 = Game::GetActors(VO_ENTRANCE);
+        		if (l1.GetNumActors() > 0)
+        		{	
+				Vector Hospital = l1.GetActor(0)->GetPosition();
+				Game::FindFreePosition(Caller, Hospital);
+			}
+			if (v.HasCommand(CMD_STANDBY_OFF))
+			{
+				v.RemoveCommand(CMD_STANDBY_OFF);
+				v.AssignCommand(CMD_STANDBY_ON);
+			}
+			if (v.HasCommand(CMD_WARNINGLIGHTS_OFF))
+			{
+				v.EnableBlinker(BLT_NONE);
+				v.RemoveCommand(CMD_WARNINGLIGHTS_OFF);
+				v.AssignCommand(CMD_WARNINGLIGHTS_ON);
+			} 
+			if (v.HasCommand(CMD_FLOODLIGHTS_OFF))
+			{
+				v.EnableSpecialLights(false);
+				v.RemoveCommand(CMD_FLOODLIGHTS_OFF);
+				v.AssignCommand(CMD_FLOODLIGHTS_ON);
+			}
+			if (v.HasObjectPath(NULL))
+				Game::ExecuteCommand(DUMMY_PATROL, &v, &v);
+			if (v.IsBlueLightEnabled())
+				v.EnableBlueLights(false);
+			PersonList transports = v.GetTransports();
+			if (transports.GetNumPersons() > 0) 
+			{
+				if (!v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+					Game::ExecuteCommand(CMD_SIREN, &v, &v);
+			}
+			if (transports.GetNumPersons() > 0)
+			{
+				Caller->PushActionMove(ACTION_NEWLIST, Hospital);
+				if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+					Caller->PushActionExecuteCommand(ACTION_APPEND, DUMMY_DISABLE, Caller, 2, false);
+				Caller->PushActionWait(ACTION_APPEND, 1.0f);
+				Caller->PushActionExecuteCommand(ACTION_APPEND, DUMMY_HOSPITAL, Caller, 0, false);
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_AR1) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUAR, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_AR2) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUAR, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_VSAV1) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUVSAV, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_VSAV2) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUVSAV, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_VSAV3) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUVSAV, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_VSAV4) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUVSAV, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+				if(StrCompare(Caller->GetPrototypeFileName(), PROTO_VSAVHR) == 0)
+				{
+					soundID = Audio::PlaySample3D(SND_TOCHUVSAVHR, Caller->GetPosition());
+					v.AttachSound(soundID);
+				}
+			} else
+			{
+				Mission::PlayHint(HINT_NOTRANSPORTS);
+				return;
+			}
+		} else
+		{
+			soundID = Audio::PlaySample3D(SND_TOCHUDRAGON, Caller->GetPosition());
+			v.AttachSound(soundID);
+			ActorList l1 = Game::GetActors(OBJ_HELIPAD);
+			if(l1.GetNumActors() > 0)
+			{
+				Actor hospital = *l1.GetActor(0);
+				Vector Hospital = hospital.GetPosition();
+			}
+			if (Game::IsSquadInVirtualObject(VO_HELI))
+			{
+				GameObjectList l2;
+ 				Game::CollectObstaclesOnVirtualObject(VO_HELI, l2, ACTOR_VEHICLE);
+				for (int i = 0; i < l2.GetNumObjects(); i++)
+				{
+					Vehicle m = l2.GetObject(i);
+					m.PushActionExecuteCommand(ACTION_NEWLIST, DUMMY_GOHOME, &m, 1, false);
+					Mission::PlayHint(HINT_HELICOPTER);					
+				}
+			}
+			Game::FindFreePosition(Caller, Hospital);
+			GameObject obj(&hospital);
+			float landingDirection = v.GetValidLandingAngle(&obj, Hospital);
+			v.PushActionFlyTo(ACTION_NEWLIST, Hospital, true, landingDirection);
+			v.PushActionWait(ACTION_APPEND, 1.0f);
+			PersonList transports = v.GetTransports();
+			if (transports.GetNumPersons() > 0)
+				v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_HOSPITAL, Caller, 0, false);
+		}
+	}
+};
+
+object DummyAtHospital : CommandScript
+{
+	DummyAtHospital()
+	{
+		SetGroupID(DummyGroup);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Target);
+		v.PushActionWait(ACTION_NEWLIST, 1.0f);		
+		
+		if (v.GetVehicleType() == VT_AMBULANCE_RTW)
+		{
+			ActorList l1 = Game::GetActors(VO_ENTRY);
+        		if (l1.GetNumActors() > 0)
+				Vector TargetPos  = l1.GetActor(0)->GetPosition();
+		} else
+		{
+			ActorList l1 = Game::GetActors(VO_ENTRY_HELIPAD);
+        		if (l1.GetNumActors() > 0)
+				Vector TargetPos = l1.GetActor(0)->GetPosition();
+		}
+		PersonList transports = v.GetTransports();
+		PersonList passengers;
+		passengers = v.GetPassengers();
+		for(int i=0; i<passengers.GetNumPersons(); i++)
+		{
+			Person p (passengers.GetPerson(i));
+			if (p.IsParamedicTeam() && p.IsCarryingPerson())
+			{
+				p.PushActionLeaveCar(ACTION_NEWLIST, Target);
+				p.PushActionMove(ACTION_APPEND, TargetPos, true);
+				p.PushActionPutInBase(ACTION_APPEND);
+				p.PushActionWait(ACTION_APPEND, 3.0f);
+				p.PushActionMove(ACTION_APPEND, &v, TARGET_REARDOOR);
+				p.PushActionTurnTo(ACTION_APPEND, &v);
+				p.PushActionEnterCar(ACTION_APPEND, &v);
+				p.PushActionWait(ACTION_APPEND, 1.0f);
+				if (v.GetVehicleType() == VT_AMBULANCE_RTW) 
+					p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_GOHOME, &v, 2, false);
+				else
+					p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_GOHOME, &v, 1, false);
+			}
+		}
+	}
+};
+
+object DummyGoHome : CommandScript
+{
+	DummyGoHome()
+	{
+		SetGroupID(20);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if(ChildID == 1)
+		{
+			Vehicle v(Target);
+			Game::ExecuteCommand(CMD_GOHOME, &v, &v);
+		}
+		if(ChildID == 2)
+		{
+			Vehicle v(Target);
+			Game::ExecuteCommand(CMD_TOFIRESTATION, &v, &v);
+		}
+	}
+};

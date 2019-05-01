@@ -1,0 +1,128 @@
+//******************************************************************************************
+//	    Remove fire hose script for the New York City mod by MikeyPI and Hoppah
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//******************************************************************************************
+
+const char PROTO_WATER_TANKER[]		= "mod:Prototypes/Vehicles/02 Fire Department/water_tanker.e4p";
+
+const char CHILD_WATER_SUPPLY[] 	= "water_supply";
+
+object RemoveFirehose : CommandScript
+{
+	RemoveFirehose()
+	{
+		SetValidTargets(ACTOR_PERSON|ACTOR_VEHICLE|ACTOR_OBJECT);
+		//SetGroupID(CGROUP_FIREHOSE);
+		//SetRestrictions2(RESTRICT2_ISHYDRANTORSELF);
+		SetPriority(1000);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return Caller->GetFirehoseID() != 0;	
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid())
+			return false;	
+		SetCursor("RemoveFirehose");			
+		if (Caller->GetEquipment() == EQUIP_FIREHOSE && Caller->GetType() == ACTOR_PERSON && Caller->GetFirehoseID() != 0)
+		{
+			if (Caller->GetID()==Target->GetID())
+				return true;
+			GameObject obj(Target);
+			if (obj.GetType() == ACTOR_OBJECT && obj.IsHydrant() && obj.IsHydrantInUse() && (Caller->GetFirehoseID() == obj.GetFirehoseID()))
+				return true;
+			else if (obj.GetType() == ACTOR_VEHICLE)
+			{
+				Vehicle v(Target);
+				if (v.IsUsingConnector(Caller))
+					return true;
+			}
+			return false;
+		}
+		else if(Caller->GetEquipment() == EQUIP_NONE && Target->GetType() == ACTOR_VEHICLE)
+		{
+			Person p(Caller);
+			Vehicle obj(Target);
+			if (p.IsInDLKBasket() || p.IsInjured() || p.IsDead() || p.GetEnteredCarID() != -1 || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.IsContaminated() || p.IsPulling() || p.GetEnteredHouseID() != -1)
+				return false;
+			if (obj.HasChild(CHILD_WATER_SUPPLY))
+			{
+				if (obj.HasCommand("DummyWaterSupplyOn"))
+				{
+					SetCursor("removewatersupply");
+					return true;
+				}
+				else if (obj.HasCommand("DummyWaterSupplyFromTankerOn") && StrCompare(obj.GetPrototypeFileName(), PROTO_WATER_TANKER) != 0)
+				{
+					SetCursor("removewatersupply");
+					return true;
+				}			
+			}
+			return false;
+		}		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 99)
+		{
+			Person p(Caller);
+			p.EnableCommand("Extinguish", true);
+			p.EnableCommand("Cool", true);
+			p.EnableAutoTarget(true);		
+		}	
+		if (Caller->GetEquipment() == EQUIP_NONE && Target->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Target);
+			if ((v.HasCommand("DummyWaterSupplyOn") || v.HasCommand("DummyWaterSupplyFromTankerOn")) && !v.HasName("extend_wye") && !v.HasName("extend_hose"))
+			{
+				Caller->PushActionMove(ACTION_NEWLIST, v.GetChildPosition(CHILD_WATER_SUPPLY));
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", Target, 2, false);
+			}
+		} else
+		{	
+			GameObject hydrant = Caller->GetHydrant();
+			if (!hydrant.IsValid())
+				return;
+			Vector TargetPos;	
+			if (hydrant.GetType() == ACTOR_OBJECT)
+				TargetPos = hydrant.GetTargetPoint(Caller, TARGET_FIREHOSE_HOOKUP);
+			else if (hydrant.GetType() == ACTOR_VEHICLE)
+			{
+				Vehicle v(&hydrant);
+				if (!v.GetUsedConnectorPosition(Caller, TargetPos))
+					return;
+			}			
+			Caller->PushActionMoveWithHose(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionUseEquipment(ACTION_APPEND, &hydrant, childID, 10.0f);				
+			if (!Caller->IsCommandEnabled("Extinguish"))
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "RemoveFirehose", Caller, 99, false);	
+			if (hydrant.HasName("extend_hose") && childID != 2)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "PcmdExtendhose", &v, 2, false);
+			if (hydrant.HasName("extend_hose") && childID == 2)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "PcmdExtendhose", &v, 3, false);
+			if (hydrant.HasName("extend_wye") && childID == 2)
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "PcmdWye", &v, 3, false);
+				
+			if (childID == 1)
+			{
+				Vehicle v(Target);
+				Caller->PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+			}
+			if (childID == 3)
+			{
+				Vehicle v(Target);
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_WATER_TANKER) == 0 && v.HasCommand("DummyWaterSupplyOn"))
+					Caller->PushActionExecuteCommand(ACTION_APPEND, "VcmdRapidDeployment", &v, 99, false);
+				else				
+					Caller->PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
+			}			
+		}
+	}
+};

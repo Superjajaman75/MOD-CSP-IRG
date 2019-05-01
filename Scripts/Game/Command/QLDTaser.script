@@ -1,0 +1,204 @@
+//******************************************************************************************
+//Queensland Mod Taser Script Version 1.1
+//By eggcarton
+//Please see the readme for usage information
+//qldmod.dyndns.org
+//******************************************************************************************
+
+const char CMD_SHOOTGUN[] 		= "ShootTaser";
+const char CMD_HOLSTERGUN[] 	= "HolsterTaser";
+const char CMD_DRAWGUN[] 		= "DrawTaser";
+const char CMD_ARREST[] 		= "Arrest";
+const char CMD_ARREST2[] 		= "PcmdArrest2";
+const char SND_DRAW[]			= "mod:Audio/FX/Misc/DrawWeapon.wav";
+const char SND_HOLSTER[]		= "mod:Audio/FX/Misc/HolsterWeapon.wav";
+const char SND_TASER[]			= "mod:Audio/FX/Misc/taser.wav";
+const char OBJ_TASER[]			= "Equipment/taser.v3o";
+const char OBJ_TASER2[]			= "Equipment/taser_aim.v3o";
+const char HINT_MISSED[] 		= "Le Taser a rate sa cible, rapprochez-vous!";
+
+int DummyGroup = 24;
+object DrawTaser : CommandScript
+{
+
+	DrawTaser()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetDoubleClickable(false);
+		SetGroupID(DummyGroup);
+		SetGroupLeader(true);
+		SetPossibleEquipment(EQUIP_NONE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetDeselectCaller(false);
+		SetPriority(700);
+		SetIcon("DrawTaser");
+		SetCursor("DrawTaser");
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return !Caller->IsEquipped();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+                        return false;
+                Person p(Caller);
+                if(p.IsValid() && !p.IsLinkedWithPerson() && !p.IsCarryingPerson() && p.GetEnteredCarID() == -1)
+                        return true;
+                return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		if(p.IsValid() && !p.IsEquipped() && !p.IsLinkedWithPerson() && !p.IsCarryingPerson())
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{	
+		Person p(Caller);
+		p.PlaceObjectInRightHand(OBJ_TASER);
+		p.PushActionSwitchAnim(ACTION_APPEND, "idlegun");
+		p.AssignCommand(CMD_SHOOTGUN);
+		p.AssignCommand(CMD_HOLSTERGUN);
+		p.RemoveCommand(CMD_DRAWGUN);
+		
+		Vector Pos = Caller->GetPosition();
+		Audio::PlaySample3D(SND_DRAW, Pos);
+	}
+};
+
+object HolsterTaser : CommandScript
+{
+
+	HolsterTaser()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetDoubleClickable(false);
+		SetGroupID(DummyGroup);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetIcon("HolsterTaser");
+		SetCursor("HolsterTaser");
+		SetGroupLeader(true);
+		SetDeselectCaller(false);
+		SetPriority(900);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		p.RemoveObjectInRightHand();
+			p.PushActionSwitchAnim(ACTION_APPEND, "idle");
+		p.RemoveObjectInRightHand();
+		p.RemoveCommand(CMD_SHOOTGUN);
+		p.RemoveCommand(CMD_HOLSTERGUN);
+		p.AssignCommand(CMD_DRAWGUN);
+		Vector Pos = Caller->GetPosition();
+		Audio::PlaySample3D(SND_HOLSTER, Pos);
+	}
+};
+
+object ShootTaser : CommandScript
+{
+	ShootTaser()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetPossibleEquipment(EQUIP_NONE);
+		SetRestrictions(RESTRICT_NOTINJURED | RESTRICT_NOTARRESTED | RESTRICT_NOTLINKED);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetIcon("ShootTaser");
+		SetCursor("ShootTaser");
+		SetPossibleExists(CPE_NONIJURED_PERSON);
+		SetPriority(700);
+		
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		Person p(Caller);
+		return !p.IsLinkedWithPerson();
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person t(Target);
+		return (t.GetRole() != ROLE_ANIMAL && t.GetRole() != ROLE_SQUAD);
+	}
+
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+	
+		Person p(Caller);
+		Person t(Target);
+		
+		//if in range
+		if (p.GetBoundingRadiusDistXYToObject(&t) < 200.f)
+		{
+			p.PushActionTurnTo(ACTION_NEWLIST, Target);
+			p.PlaceObjectInRightHand(OBJ_TASER2);
+			p.PushActionSwitchAnim(ACTION_APPEND, "pistolshoot");
+			t.ClearActions();
+			Vector Pos = p.GetPosition();
+			Audio::PlaySample3D(SND_TASER, Pos);
+			t.PushActionSwitchAnim(ACTION_APPEND, "becomeunconsc");
+			t.PushActionWait(ACTION_APPEND, 2.0f);
+			t.PushActionSwitchAnim(ACTION_APPEND, "layingcont");
+			t.PushActionWait(ACTION_APPEND, 4.0f);
+			p.PushActionWait(ACTION_APPEND, 4.0f);
+			p.PushActionMove(ACTION_APPEND, t.GetPosition(), true);
+			p.PushActionSwitchAnim(ACTION_APPEND, "treatinjured1");
+			p.PushActionWait(ACTION_APPEND, 4.0f);
+			t.PushActionWait(ACTION_APPEND, 4.0f);
+			t.PushActionSwitchAnim(ACTION_APPEND, "standup3");
+			p.PushActionExecuteCommand(ACTION_APPEND, CMD_HOLSTERGUN, Caller);
+			p.PushActionArrest(ACTION_APPEND, Target);
+			
+			int random = Math::rand()%10;
+			
+			if (random < 90){
+				//normal
+				t.SetRole(ROLE_CIVILIAN);
+				t.PushActionWait(ACTION_APPEND, 2.0f);
+			} else if (random < 95){
+				//resist
+				t.PushActionSwitchAnim(ACTION_APPEND, "fistfight");
+			} else if (random < 99){
+				//injure
+				t.Injure(INJUREREASON_SHOT);
+			} else if (random > 99){
+				//kill
+				t.Kill(INJUREREASON_SHOT); 
+			}
+		} else
+		{
+			p.PushActionExecuteCommand(ACTION_APPEND, CMD_HOLSTERGUN, Caller);
+			Mission::PlayHint(HINT_MISSED);
+		}
+	}
+};

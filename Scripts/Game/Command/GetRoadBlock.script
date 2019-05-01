@@ -1,0 +1,57 @@
+object GetRoadBlock : CommandScript
+{
+	GetRoadBlock()
+	{
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_OBJECT);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetRestrictions(RESTRICT_NOTBURNING | RESTRICT_NOTDESTROYED | RESTRICT_HASROADBLOCK);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetNeedsCarWithFlagSet(OF_HAS_ROADBLOCK);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if (p.GetEquipment()==EQUIP_ROADBLOCK || p.IsCarryingPerson()||p.IsLinkedWithPerson()|| p.GetFirehoseID()!=0 || p.IsPulling())
+			return false;
+		if (!Game::ExistsNormalObjectWithFlagSet(OF_HAS_ROADBLOCK))
+			return false;
+		return true;
+	}*/
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+
+		GameObject obj(Target);
+		if (Caller->GetObjectType()==TYPE_PERSON && Caller->GetEquipment()!=EQUIP_ROADBLOCK &&
+			obj.IsValid() && obj.IsFlagSet(OF_HAS_ROADBLOCK))
+		{
+			if (obj.GetType() == ACTOR_VEHICLE)
+			{
+				Vehicle vec(&obj);
+				if (vec.IsDestroyed())
+					return false;
+			}
+			Person p(Caller);
+			if(p.IsValid() && (p.IsCarryingPerson()||p.IsLinkedWithPerson()|| p.GetFirehoseID()!=0 || p.IsPulling() || p.GetEnteredCarID() != -1))
+				return false;
+			
+			return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_EQUIPMENTDOOR);
+		
+		Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionGetEquipment(ACTION_APPEND, Target, EQUIP_ROADBLOCK);
+	}
+};

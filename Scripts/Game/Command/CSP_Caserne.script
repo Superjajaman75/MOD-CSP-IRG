@@ -1,0 +1,175 @@
+const char OBJ_COS[]				= "mod:Prototypes/Persons/Fire Department/SP_COS.e4p";
+const char OBJ_FEU[]				= "mod:Prototypes/Persons/Fire Department/SP_FEU.e4p";
+const char OBJ_ARI[]				= "mod:Prototypes/Persons/Fire Department/SP_ARI.e4p";
+const char OBJ_GIL[]				= "mod:Prototypes/Persons/Fire Department/SP_GHV.e4p";
+const char OBJ_PLO[]				= "mod:Prototypes/Persons/Fire Department/SP_PLO.e4p";
+const char OBJ_FDF[]				= "mod:Prototypes/Persons/Fire Department/SP_FDF.e4p";
+const char OBJ_CHI[]				= "mod:Prototypes/Persons/Fire Department/SP_CHI.e4p";
+const char OBJ_SPCDHR[]			= "mod:Prototypes/Persons/Fire Department/SP_CDHR.e4p";
+const char OBJ_SEC[]				= "mod:Prototypes/Persons/Ambulance/PC_MED.e4p";
+const char OBJ_INF[]				= "mod:Prototypes/Persons/Ambulance/PC_MED.e4p";
+const char OBJ_BRA[]				= "mod:Prototypes/Persons/Ambulance/PC_BRA.e4p";
+const char OBJ_MED[]				= "mod:Prototypes/Persons/Fire Department/SP_MED.e4p";
+
+const char OBJ_SAMU[]				= "mod:Prototypes/Persons/Ambulance/SAMU_MED.e4p";
+const char OBJ_SAMUBRA[]			= "mod:Prototypes/Persons/Ambulance/SAMU_BRA.e4p";
+
+const char OBJ_POLNORM[]			= "mod:Prototypes/Persons/Police/polnormal.e4p";
+const char OBJ_POLGIL[]				= "mod:Prototypes/Persons/Police/polgilet.e4p";
+const char OBJ_CRS[]				= "mod:Prototypes/Persons/Police/crs.e4p";
+const char OBJ_NEGO[]				= "mod:Prototypes/Persons/Police/negociateur.e4p";
+const char OBJ_ECL[]				= "mod:Prototypes/Persons/Police/eclaireur.e4p";
+const char OBJ_SNIP[]				= "mod:Prototypes/Persons/Police/sniper.e4p";
+const char OBJ_DEM[]				= "mod:Prototypes/Persons/Police/demineur.e4p";
+const char OBJ_GENNORM[]			= "mod:Prototypes/Persons/Police/gnormal.e4p";
+const char OBJ_GENGIL[]				= "mod:Prototypes/Persons/Police/ggilet.e4p";
+const char OBJ_BAC[]				= "mod:Prototypes/Persons/Police/bac.e4p";
+const char OBJ_BRI[]				= "mod:Prototypes/Persons/Police/bri.e4p";
+const char OBJ_GM[]				= "mod:Prototypes/Persons/Police/gm.e4p";
+const char OBJ_MUNI[]				= "mod:Prototypes/Persons/Police/polmuni.e4p";
+
+const char OBJ_ERDF[]				= "mod:Prototypes/Persons/TEC/bspp_erdf.e4p";
+const char OBJ_DDE[]				= "mod:Prototypes/Persons/TEC/bspp_dde1.e4p";
+
+const char DUMMY_CALLCREW[]		= "DummyCallCrew";
+
+const char VO_SPAWNCSP[]			= "vo_spawn_csp";
+const char VO_SPAWNCPI[]			= "vo_spawn_cpi";
+const char VO_SPAWNSAMU[]			= "vo_spawn_samu";
+const char VO_SPAWNTEC[]			= "vo_spawn_tec";
+const char VO_SPAWNPOL[]			= "vo_spawn_pol";
+
+const char VO_SQUADCSP[]			= "vo_squad_csp";
+const char VO_SQUADCPI[]			= "vo_squad_cpi";
+const char VO_SQUADSAMU[]			= "vo_squad_samu";
+const char VO_SQUADTEC[]			= "vo_squad_tec";
+const char VO_SQUADPOL[]			= "vo_squad_pol";
+
+const char UNNAMED[]				= "Unnamed";
+
+int DummyGroup = 20;
+
+
+object DummyCallCrew : CommandScript
+{
+	DummyCallCrew()
+	{
+ 		SetGroupID(DummyGroup);
+	}
+
+ 	bool CheckGroupVisibility(GameObject *Caller)
+ 	{
+ 		return false;
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		return false;
+ 	} 
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		ActorList l1;
+		
+		if(v.IsCollidingWithVirtualObject(VO_SQUADCSP))
+			l1 = Game::GetActors(VO_SPAWNCSP);
+		else if(v.IsCollidingWithVirtualObject(VO_SQUADCPI))
+			ActorList l1 = Game::GetActors(VO_SPAWNCPI);
+		else if(v.IsCollidingWithVirtualObject(VO_SQUADSAMU))
+			ActorList l1 = Game::GetActors(VO_SPAWNSAMU);
+		else if(v.IsCollidingWithVirtualObject(VO_SQUADPOL))
+			ActorList l1 = Game::GetActors(VO_SPAWNPOL);
+		else if(v.IsCollidingWithVirtualObject(VO_SQUADTEC))
+			ActorList l1 = Game::GetActors(VO_SPAWNTEC);
+		
+		if(l1.GetNumActors() > 0)
+			Vector Spawn = l1.GetActor(0)->GetPosition();
+		
+		
+		PersonList passengers = v.GetPassengers();
+		if (ChildID == 1)
+		{
+			Person p = Game::CreatePerson(OBJ_INF, UNNAMED);
+			p.SetEquipment(EQUIP_EMERGENCY_CASE);
+		} else if (ChildID == 2)
+			Person p = Game::CreatePerson(OBJ_BRA, UNNAMED);
+		else if (ChildID == 3)
+		{
+			Person p = Game::CreatePerson(OBJ_SEC, UNNAMED);
+			p.SetEquipment(EQUIP_EMERGENCY_CASE);
+		} else if (ChildID == 4)
+			Person p = Game::CreatePerson(OBJ_COS, UNNAMED);
+		else if (ChildID == 5)
+			Person p = Game::CreatePerson(OBJ_FEU, UNNAMED);
+		else if (ChildID == 6)
+			Person p = Game::CreatePerson(OBJ_ARI, UNNAMED);
+		else if (ChildID == 7)
+			Person p = Game::CreatePerson(OBJ_GIL, UNNAMED);
+		else if (ChildID == 8)
+			Person p = Game::CreatePerson(OBJ_PLO, UNNAMED);
+		else if (ChildID == 9)
+		{
+			Person p = Game::CreatePerson(OBJ_SAMU, UNNAMED);
+			p.SetEquipment(EQUIP_EMERGENCY_CASE);
+		} else if (ChildID == 10)
+			Person p = Game::CreatePerson(OBJ_FDF, UNNAMED);
+		else if (ChildID == 11)
+			Person p = Game::CreatePerson(OBJ_CHI, UNNAMED);
+		else if (ChildID == 12)
+			Person p = Game::CreatePerson(OBJ_SPCDHR, UNNAMED);
+		else if (ChildID == 13)
+		{
+			Person p = Game::CreatePerson(OBJ_MED, UNNAMED);
+			p.SetEquipment(EQUIP_EMERGENCY_CASE);
+		} else if (ChildID == 15)
+			Person p = Game::CreatePerson(OBJ_SAMUBRA, UNNAMED);
+		else if (ChildID == 16)
+			Person p = Game::CreatePerson(OBJ_POLNORM, UNNAMED);
+		else if (ChildID == 17)
+			Person p = Game::CreatePerson(OBJ_POLGIL, UNNAMED);
+		else if (ChildID == 18)
+			Person p = Game::CreatePerson(OBJ_CRS, UNNAMED);
+		else if (ChildID == 19)
+		{
+			Person p = Game::CreatePerson(OBJ_NEGO, UNNAMED);
+			p.SetEquipment(EQUIP_MEGAPHONE);
+		} else if (ChildID == 20)
+		{
+			Person p = Game::CreatePerson(OBJ_ECL, UNNAMED);
+			p.SetEquipment(EQUIP_LAPTOP);
+		} else if (ChildID == 21)
+		{
+			Person p = Game::CreatePerson(OBJ_SNIP, UNNAMED);
+			p.SetEquipment(EQUIP_RIFLE);
+		} else if (ChildID == 22)
+			Person p = Game::CreatePerson(OBJ_DEM, UNNAMED);
+		else if (ChildID == 23)
+			Person p = Game::CreatePerson(OBJ_GENNORM, UNNAMED);	
+		else if (ChildID == 24)
+			Person p = Game::CreatePerson(OBJ_GENGIL, UNNAMED);
+		else if (ChildID == 25)
+			Person p = Game::CreatePerson(OBJ_BAC, UNNAMED);
+		else if (ChildID == 26)
+			Person p = Game::CreatePerson(OBJ_GM, UNNAMED);
+		else if (ChildID == 27)
+			Person p = Game::CreatePerson(OBJ_MUNI, UNNAMED);
+		else if (ChildID == 28)
+			Person p = Game::CreatePerson(OBJ_ERDF, UNNAMED);
+		else if (ChildID == 29)
+			Person p = Game::CreatePerson(OBJ_DDE, UNNAMED);
+		else if (ChildID == 33)
+			Person p = Game::CreatePerson(OBJ_BRI, UNNAMED);
+		else
+			return;
+
+
+		p.SetUpgradeLevel(3);
+		Game::FindFreePosition(&p, Spawn, 250);
+		p.SetPosition(Spawn);
+		p.SetPlayerMP(Caller->GetPlayerMP());
+		p.PushActionMove(ACTION_NEWLIST, &v, TARGET_ANY);
+		p.PushActionTurnTo(ACTION_APPEND, &v);
+		p.PushActionEnterCar(ACTION_APPEND, &v);
+	}
+};

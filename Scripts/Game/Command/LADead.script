@@ -1,0 +1,94 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Includes: All commands to cover dead bodies with a blanket
+//
+//	- PcmdDead
+//
+//		Script inspired by Hoppah, modified by Superjajaman75
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_DEAD[]			= "PcmdDead";
+const char PROTO_BLANKET[] 		= "mod:Prototypes/Objects/01 LA Equipment/body_cover.e4p";
+const char HINT_DEAD[]			= "La victime est déclarée Delta Charlie Delta!";
+
+int DummyGroup = 22;
+
+object PcmdDead : CommandScript 
+{
+	PcmdDead()
+	{
+		SetGroupID(DummyGroup);		
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Caller->GetID() != Target->GetID()) 
+			return false;
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Person t(Target);
+		
+		if (p.GetEnteredHouseID() != -1)
+		{
+			Actor ha = Game::GetActor(p.GetEnteredHouseID());
+			OpenHouse sourceHouse(&ha);
+			if (!sourceHouse.HasGroundEntrance())
+				return;
+		}
+
+		if (childID == 0)
+		{
+			if (!t.HasCommand("DummyBlanket"))
+			{	
+				Mission::PlayHint(HINT_DEAD);
+				if (p.IsParamedicTeam())
+				{
+					p.PushActionSwitchAnim(ACTION_NEWLIST, "paramedictreat_down");
+					p.PushActionWait(ACTION_APPEND, 2.f);
+					p.PushActionSwitchAnim(ACTION_APPEND, "paramedictreat");
+					p.PushActionWait(ACTION_APPEND, 0.5f);
+					p.PushActionExecuteCommand(ACTION_APPEND, CMD_DEAD, &t, 1, false);
+					p.PushActionWait(ACTION_APPEND, 1.f);
+					p.PushActionSwitchAnim(ACTION_APPEND, "paramedictreat_up");
+				} else
+				{
+					p.PushActionSwitchAnim(ACTION_NEWLIST, "treatinjured1");
+					p.PushActionWait(ACTION_APPEND, 0.5f);
+					p.PushActionExecuteCommand(ACTION_APPEND, CMD_DEAD, &t, 1, false);
+					p.PushActionWait(ACTION_APPEND, 1.f);
+					p.PushActionSwitchAnim(ACTION_APPEND, "idle");
+				}
+			}
+		}
+		if (childID == 1)
+		{
+			t.ChangePrototype(PROTO_BLANKET);
+			t.AssignCommand("DummyBlanket");
+		}
+	}
+};
+
+object DummyBlanket : CommandScript
+{
+	DummyBlanket()
+	{
+		SetGroupID(DummyGroup);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return false;
+	}
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+	}
+};

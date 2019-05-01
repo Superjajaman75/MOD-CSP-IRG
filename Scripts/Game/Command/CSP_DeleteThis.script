@@ -1,0 +1,29 @@
+object Delete_This : CommandScript
+{
+	Delete_This()
+	{
+		SetIcon("balayeuse");
+		SetCursor("balayeuse");
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid() && Target->GetID() == Caller->GetID())
+			return false;
+		return true;
+
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{	
+		if (!Caller->IsValid() && Target->GetID() == Caller->GetID())
+			return false;	
+		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (Target->GetID() != Caller->GetID())
+			Target->PushActionDeleteOwner(ACTION_NEWLIST);
+	}
+};

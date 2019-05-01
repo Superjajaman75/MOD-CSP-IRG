@@ -1,0 +1,189 @@
+//******************************************************************************************
+//
+// Usage of this script in other mods is NOT allowed without permission of dark poulpo
+//
+// l'utilisation de se script ou des algorithmes est interdit sans permission de dark poulpo
+//
+//******************************************************************************************
+
+	
+object Mod_PlaceCone: CommandScript
+{
+	bool fin;
+	static Vector debut;
+
+	Mod_PlaceCone()
+	{
+		SetIcon("pose_cone");
+		SetCursor("null");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_PERSON)
+ 		{
+			char tpm[100];
+			sprintf(tpm,"cone %s",Caller->GetName());
+			GameObjectList conelist=Game::GetGameObjects(tpm);
+			int max=200;
+			//if (conelist.GetNumObjects() >= max) return false;
+ 			return true;
+ 		}
+ 		
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 		fin=false;
+		if (Input::LShiftPressed()) fin=true;
+		
+ 		return true;
+ 	}
+
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+
+		Caller->PushActionWait(ACTION_NEWLIST, 0.1f);
+
+		Vector Pos = Caller->GetPosition();
+		float r[9];
+		float childr[9];
+		Caller->GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+
+		char tpm[100];
+		sprintf(tpm,"cone %s",Caller->GetName());
+
+
+
+		GameObjectList conelist=Game::GetGameObjects(tpm);
+		if (conelist.GetNumObjects() ==0) fin=false;
+
+
+		int max=200;
+
+
+		float dx = 55.f, dy = 0.f, dz = 0.f;
+		Math::RotateVector(dx, dy, dz, r);
+		Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+		Math::MultiplyMatrices(childr, r);
+
+		Pos = Pos + Vector(dx, dy, 0);
+		if (!fin) debut = Pos;
+
+
+		Vector dir = Vector(0.0f, 0.0f, 0.0f);
+		Vector premier = Pos;
+		if (fin) {
+			premier = debut;
+			dir = Pos - debut;
+		}
+
+		float longueur = Math::VectorLen(dir.x,dir.y,dir.z);
+
+		Math::NormalizeVector(dir.x,dir.y,dir.z);
+		dir.x = dir.x * 140;
+		dir.y = dir.y * 140;
+		dir.z = dir.z * 140;
+		
+
+		float longueur2 = Math::VectorLen(dir.x,dir.y,dir.z);
+
+		int maxloop=1;
+		if (longueur2!=0.0f) maxloop = int(longueur/longueur2);
+
+		Caller->PushActionGetEquipment(ACTION_APPEND, Target, EQUIP_NONE);
+		Caller->PushActionSwitchAnim(ACTION_APPEND, "getsmallobj");
+
+
+		for(int i = 0;i<maxloop;i++) {
+			
+			premier = premier + dir;
+			GameObject v = Game::CreateVehicle("mod:Prototypes/Vehicles/Police/pylon.e4p", tpm);
+			if (v.IsValid()) {
+				v.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				Game::FindFreePosition(&v, premier, 60.f);
+				v.SetPosition(premier);
+				v.UpdatePlacement();
+				v.SetPlayerMP(Caller->GetPlayerMP());
+				v.SetSelectable(true);
+				v.SetCommandable(true);
+
+				
+				debut = premier;
+			}
+
+			conelist=Game::GetGameObjects(tpm);
+			if (conelist.GetNumObjects() >= max) {
+				p.RemoveObjectInRightHand();
+				break;
+			}
+		}
+
+		
+
+	}
+};
+
+object Mod_RetireCone: CommandScript
+{
+	Mod_RetireCone()
+	{
+		SetCursor("null");
+		SetIcon("Retire_Cone");
+	}
+
+	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_PERSON)
+ 		{
+			char tpm[100];
+			sprintf(tpm,"cone %s",Caller->GetName());
+			GameObjectList conelist=Game::GetGameObjects(tpm);
+			if (conelist.GetNumObjects() == 0) return false;
+ 			return true;
+ 		}
+ 		
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_PERSON)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		
+		char tpm[100];
+		sprintf(tpm,"cone %s",Caller->GetName());
+		GameObjectList conelist=Game::GetGameObjects(tpm);
+		
+		for(int i = 0; i < conelist.GetNumObjects(); i++) {
+			if (conelist.GetObject(i)->IsValid() && conelist.GetObject(i)->IsInsideMap()) {
+				conelist.GetObject(i)->PushActionDeleteOwner(ACTION_NEWLIST);
+			}
+		}
+	}
+};
+

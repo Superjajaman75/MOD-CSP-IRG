@@ -1,0 +1,142 @@
+//******************************************************************************************
+// #Version 1.3#
+//
+// 		Changes: - HasCommand things changed.
+//			 - Units can only put dead bodies in Coroner's Van
+//			 - Units can't put persons in burning cars.
+//
+//
+//******************************************************************************************
+
+const char OBJ_CORONER[] 			= "mod:Prototypes/Persons/Ambulance/pompe.e4p";
+const char HINT_TRANSPORT_DEAD[] 		= "Le fourgon funéraire ne peut transporter que des morts";
+
+object PutInCar : CommandScript
+{
+	TargetPoint targetPoint;
+	
+	
+	PutInCar()
+	{
+		SetIcon("putintocar");
+		SetCursor("putintocar");
+		SetValidTargets(ACTOR_VEHICLE);
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		return p.IsLinkedWithPerson() || p.IsCarryingPerson();
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetType()!=ACTOR_VEHICLE || Caller->GetType()!=ACTOR_PERSON)
+			return false;
+		
+		Vehicle v(Target);		
+		if (v.GetVehicleType()==VT_NOSQUAD || v.GetFreeTransports() < 1)
+			return false;
+		if(!v.IsDestroyed() && !v.IsBurning())
+		{
+			Person p(Caller);
+			if (p.GetEnteredCarID() != -1 || p.IsContaminated())
+				return false;
+			targetPoint = TARGET_REARDOOR;
+			if (p.IsLinkedWithPerson())
+			{
+				Person linked = p.GetArrested();
+				if (linked.IsValid() && linked.IsContaminated())
+				   	return false;
+			}
+
+			bool ITW = p.IsCarryingPerson() && v.GetVehicleType() == VT_AMBULANCE_ITW;
+			bool STW = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_STW && (p.HasCommand("Arrest"));
+			bool MTW = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_MTW && (p.HasCommand("Arrest"));
+			bool SW = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_SW && (p.HasCommand("Arrest"));
+			bool GTW = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_GTW && (p.HasCommand("Arrest"));
+			bool WAW = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_WAW && (p.HasCommand("Arrest"));
+			bool PHC = p.IsLinkedWithPerson() && v.GetVehicleType() == VT_POLICE_PHC && v.IsOnGround() && (p.HasCommand("Arrest"));
+			bool TransEvac = v.GetVehicleType() == VT_AMBULANCE_TRANSEVAC && (p.IsCarryingPerson() || p.IsLinkedWithPerson());
+			
+			if(!ITW && !STW && !PHC && !MTW && !SW && !GTW && !WAW && !TransEvac)
+				return false;
+
+			else if (SW || ITW || TransEvac || MTW || WAW || GTW || STW)
+				targetPoint = TARGET_PASSENGERDOOR;
+
+			// sonstige prüfungen (heli gelandet, boot angelegt, etc.)
+			return true;
+		}
+
+		return false;
+	}
+	
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		Vehicle v(Target);
+
+		if (StrCompare(v.GetPrototypeFileName(), OBJ_CORONER) == 0)
+           	{
+			if (p.IsCarryingPerson())
+			{
+				Person carried = p.GetCarried();
+				bool carriedClassified = false;
+				bool carriedDead = false;
+				if (carried.IsClassified())
+					carriedClassified = true;
+				if (carried.IsDead())
+					carriedDead = true;
+				if(!carriedClassified)
+				{
+					ScriptInterface::ShowMessageTickerTextForSinglePlayer(Caller, "ALLM_CLASSIFY_FIRST");
+					return;
+				}
+				if(carriedClassified && carriedDead)
+				{
+					Vector TargetPos = Target->GetTargetPoint(Caller, targetPoint);
+		
+					Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+					Caller->PushActionTurnTo(ACTION_APPEND, Target);
+					Caller->PushActionPutInCar(ACTION_APPEND, Target);
+				} else
+				{
+					Mission::PlayHint(HINT_TRANSPORT_DEAD);
+					return;
+				}
+			}
+		} else if (v.GetVehicleType() == VT_POLICE_STW)
+		{
+			Vector TargetPos = Target->GetTargetPoint(Caller, targetPoint);
+			
+			Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionPutInCar(ACTION_APPEND, Target);
+			Caller->PushActionEnterCar(ACTION_APPEND, Target);
+		} else
+		{
+			if (p.IsCarryingPerson())
+			{
+				Person carried = p.GetCarried();
+				bool carriedClassified = false;
+				if (carried.IsClassified())
+					carriedClassified = true;
+				if(!carriedClassified && (v.GetVehicleType() == VT_AMBULANCE_ITW || v.GetVehicleType() == VT_AMBULANCE_RTW || v.GetVehicleType() == VT_AMBULANCE_RHC))
+				{
+					ScriptInterface::ShowMessageTickerTextForSinglePlayer(Caller, "ALLM_CLASSIFY_FIRST");
+					return;
+				}
+			}
+
+			Vector TargetPos = Target->GetTargetPoint(Caller, targetPoint);
+		
+			// fahrzeug muss verfolgt werden wenn es sich bewegt
+			Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionPutInCar(ACTION_APPEND, Target);
+		}
+	}
+};

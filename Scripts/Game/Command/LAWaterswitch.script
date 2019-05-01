@@ -1,0 +1,119 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Includes: All Automatic Sirens commands
+//
+//	- VcmdWaterOn
+//	- VcmdWaterOff
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_WATER_ON[]			= "VcmdWaterOn";
+const char CMD_WATER_OFF[]		= "VcmdWaterOff";
+const char DUMMY_HOSESON[] 			= "DummyHosesAreOn";
+
+int DummyGroup = 31;
+
+object VcmdWaterOn : CommandScript
+{
+	VcmdWaterOn()
+	{
+		SetIcon("wateron");
+		SetCursor("wateron");
+ 		SetGroupLeader(true);
+ 		SetGroupID(DummyGroup);
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() != VT_FIREFIGHTERS_TLF)
+				return false;
+				
+			//if (v.HasCommand(DUMMY_HOSESON))
+			//	return false;
+		}
+
+		return true;
+ 	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		v.EnableAutoTarget(true);
+		v.RemoveCommand(CMD_WATER_ON);
+		v.AssignCommand(CMD_WATER_OFF);
+		v.AssignCommand("Extinguish");
+		v.AssignCommand("Cool");
+		//v.PushActionWaterOn(ACTION_NEWLIST);
+	}
+};
+
+object VcmdWaterOff : CommandScript
+{
+	VcmdWaterOff()
+	{
+		SetIcon("wateroff");
+		SetCursor("wateroff");
+ 		SetGroupLeader(true);
+ 		SetGroupID(DummyGroup);
+		SetValidTargets(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.GetVehicleType() != VT_FIREFIGHTERS_TLF)
+				return false;
+		}
+
+		return true;
+ 	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Vehicle v(Caller);
+		v.EnableAutoTarget(false);
+		v.RemoveCommand(CMD_WATER_OFF);
+		v.AssignCommand(CMD_WATER_ON);
+		v.ClearActions();
+		v.RemoveCommand("Extinguish");
+		v.RemoveCommand("Cool");
+		//v.PushActionWaterOn(ACTION_NEWLIST);
+	}
+};
+
+

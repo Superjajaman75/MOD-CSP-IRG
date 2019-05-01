@@ -1,0 +1,100 @@
+// ## Flutlichtmast der THW'ler - Steuerung
+// ## created by Hoppah
+
+int DummyGroup = 22;
+
+object VCmdFloodLightsOn : CommandScript
+{
+ 	VCmdFloodLightsOn()
+ 	{
+ 		SetIcon("floodlightson");
+ 		SetCursor("lighton");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetPriority(100);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 
+		v.EnableSpecialLights(true);
+		v.AssignCommand("VCmdFloodLightsOff"); 
+		v.RemoveCommand("VCmdFloodLightsOn");
+ 	}	
+};
+
+object VCmdFloodLightsOff : CommandScript
+{
+ 	VCmdFloodLightsOff()
+ 	{
+ 		SetIcon("floodlightsoff");
+		SetCursor("lightoff");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetPriority(100);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 
+		v.EnableSpecialLights(false);
+		v.AssignCommand("VCmdFloodLightsOn"); 
+		v.RemoveCommand("VCmdFloodLightsOff");
+ 	}	
+};

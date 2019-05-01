@@ -1,0 +1,54 @@
+//******************************************************************************************
+// #Version 1.2#
+//
+// 		Changes: - De-activates warninglights.
+//
+//******************************************************************************************
+
+const char DUMMY_WARNINGLIGHTS[]		= "DummyHasWarningLights";
+
+object Deinstall: CommandScript
+{
+	Deinstall()
+	{
+		SetValidTargets(ACTOR_VEHICLE);
+		SetGroupID(CGROUP_INSTALL);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		Vehicle v(Caller);
+		return v.IsInstalled();
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Caller->GetID() != Target->GetID() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+
+		Vehicle v(Caller);
+		if (!v.IsInstalled() || v.IsUplifted() || v.IsUplifting() || !v.IsBasketEmpty())
+			return false;
+		
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.PushActionDeinstall(ACTION_NEWLIST);
+		if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK)
+		{
+			//v.EnableSpecialLights(false);
+			if (v.HasCommand(DUMMY_WARNINGLIGHTS))
+			{
+				v.EnableBlinker(BLT_NONE);
+				v.RemoveCommand(DUMMY_WARNINGLIGHTS); 
+			}
+		}
+	}
+};

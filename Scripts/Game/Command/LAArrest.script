@@ -1,0 +1,288 @@
+//Festnahme mit Waffe by Woltep
+//Edited for LA Mod by Hoppah
+
+const char DUMMY_ARREST[]		= "DummyArrest";
+const char DUMMY_ARREST2[]		= "DummyArrest2";
+const char CMD_ARREST[] 		= "Arrest";
+const char CMD_ARREST2[] 		= "PcmdArrest2";
+const char CMD_SHOOTGUN[]		= "Shoot";
+const char CMD_HOLSTERGUN[]		= "HolsterWeapon";
+const char CMD_DRAWGUN[]		= "DrawWeapon";
+
+object PcmdArrest2 : CommandScript
+{
+	PcmdArrest2()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetGroupID(CGROUP_ARREST);
+		SetPriority(800);
+		SetIcon("arrest");
+		SetCursor("arrest");
+		SetPossibleEquipment(EQUIP_PISTOL);
+		SetRestrictions(RESTRICT_NOTINJURED | RESTRICT_NOTARRESTED | RESTRICT_NOTLINKED);
+		SetGroupLeader(true);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_NONIJURED_PERSON);
+	}
+
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		/*if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;*/
+		Person p(Caller);
+		if(!p.IsValid() || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.GetEnteredCarID() != -1 || p.IsPhysicsSimulationEnabled())
+			return false;
+
+		GameObjectList SelectPer = Game::GetSelectedGameObjects();
+		if (SelectPer.GetNumObjects() > 1)
+			return false;
+
+		return true;
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		return !p.IsLinkedWithPerson();
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() ||  Caller->IsEquipped() && Caller->GetEquipment() != EQUIP_PISTOL || !Target->IsValid() || Target->GetID() == Caller->GetID() )
+			return false;
+
+		Person p(Caller);
+		if(!p.IsValid() || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.GetEnteredCarID() != -1)
+			return false;
+
+		Person t(Target);
+		if(!t.IsValid() || t.GetState() != PERSONSTATE_NORMAL || t.GetEquipment() == EQUIP_RIFLE || t.IsCurrentAnimation("pistolshoot") || t.IsCurrentAnimation("pistoltarget"))
+			return false;
+			
+		if(t.GetEnteredHouseID() != -1 && p.GetEnteredHouseID() == -1)
+			return false;
+
+		if(p.GetEnteredHouseID() != -1 && t.GetEnteredHouseID() == -1)
+			return false;
+
+		return (t.GetRole() != ROLE_ANIMAL && t.GetRole() != ROLE_SQUAD);
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (Caller->GetEquipment() == EQUIP_PISTOL) 
+		{
+			Person t(Target);
+			Vector CmdPos, TargetPos;
+			CmdPos = Game::GetCommandPos();
+			TargetPos = CmdPos;
+
+			Person p(Caller);
+			if (!p.IsValid() || !t.IsValid())
+				return;
+			if (t.IsCurrentAnimation("hostage_down"))
+			{
+				p.PushActionWait(ACTION_NEWLIST, 0.5f);
+				p.PushActionMove(ACTION_APPEND, &t, TARGET_FOLLOW);
+				p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+				p.PushActionArrest(ACTION_APPEND, &t, false);
+				p.PushActionWait(ACTION_APPEND, 1.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+				return;
+			}
+			if (p.GetThrowPosition(TargetPos))
+			{
+				p.PushActionMove(ACTION_NEWLIST, TargetPos);
+				p.PushActionTurnTo(ACTION_APPEND, CmdPos);
+			} 
+			else
+			p.PushActionTurnTo(ACTION_NEWLIST, CmdPos);
+			p.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+			p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST, Target, 0, false);
+		}
+	}
+};
+                       
+object DummyArrest : CommandScript
+{
+	DummyArrest()
+	{
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person t(Target);
+		Person p(Caller);
+
+		if (t.GetRole() != ROLE_GANGSTER)
+		{
+			t.ClearActions();
+			t.RemoveObjectPath();
+			t.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+			p.PushActionWait(ACTION_APPEND, 3.0f);
+			p.PushActionMove(ACTION_APPEND, &t, TARGET_TOUCHPERSON);
+			p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+			p.PushActionArrest(ACTION_APPEND, &t, false);
+			p.PushActionWait(ACTION_APPEND, 1.f);
+			p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+		}
+		else if (t.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKALL || t.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD || t.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD_SMART)
+		{
+			int Chance = Math::rand() % 2;
+			if (Chance == 0)
+			{
+				t.ClearActions();
+				t.SetBehaviour(BEHAVIOUR_GANGSTER_CIVILARMED);
+				t.SetDisableGangsterSymbol(false);
+				t.RemoveObjectPath();
+				t.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+				t.PushActionWait(ACTION_APPEND, 20.0f);
+				t.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Target, 1, false);	
+				p.PushActionWait(ACTION_APPEND, 3.0f);
+				p.PushActionMove(ACTION_APPEND, &t, TARGET_FOLLOW);
+				p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+				p.PushActionArrest(ACTION_APPEND, &t, false);
+				p.PushActionWait(ACTION_APPEND, 1.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+			}
+			else
+			{
+				t.SetPrimaryTarget(&p);
+				p.PushActionShoot(ACTION_APPEND, Target);
+			}
+		}
+		else if (t.GetBehaviour() == BEHAVIOUR_GANGSTER_GUARDHOSTAGE || t.GetBehaviour() == BEHAVIOUR_GANGSTER_GUARDPASSAGE)
+		{
+			int Chance = Math::rand() % 3;
+			if (Chance == 0)
+			{
+				t.ClearActions();
+				t.SetBehaviour(BEHAVIOUR_GANGSTER_CIVILARMED);
+				t.SetDisableGangsterSymbol(false);
+				t.RemoveObjectPath();
+				t.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+				t.PushActionWait(ACTION_APPEND, 20.0f);
+				t.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Target, 1, false);
+				p.PushActionWait(ACTION_APPEND, 3.0f);
+				p.PushActionMove(ACTION_APPEND, &t, TARGET_FOLLOW);
+				p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+				p.PushActionArrest(ACTION_APPEND, &t, false);
+				p.PushActionWait(ACTION_APPEND, 1.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+			}
+			else
+			{
+				t.SetPrimaryTarget(&p);
+				p.PushActionShoot(ACTION_APPEND, Target);
+			}
+		}
+		else if (t.GetBehaviour() == BEHAVIOUR_GANGSTER_THROWSTONES || t.GetBehaviour() == BEHAVIOUR_GANGSTER_THROWMOLOTOV || t.GetBehaviour() == BEHAVIOUR_GANGSTER_FISTFIGHT)
+		{
+			int Chance = Math::rand() % 3;
+			if (Chance == 0)
+			{
+				t.ClearActions();
+				t.SetBehaviour(BEHAVIOUR_GANGSTER_CIVILARMED);
+				t.SetDisableGangsterSymbol(false);
+				t.RemoveObjectPath();
+				t.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+				t.PushActionWait(ACTION_APPEND, 20.0f);
+				t.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Target, 2, false);
+				p.PushActionWait(ACTION_APPEND, 3.0f);
+				p.PushActionMove(ACTION_APPEND, &t, TARGET_FOLLOW);
+				p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+				p.PushActionArrest(ACTION_APPEND, &t, false);
+				p.PushActionWait(ACTION_APPEND, 1.f);
+				p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+			}
+			else if (Chance == 1)
+			{
+				t.SetFleeing(true);
+				if (!t.HasObjectPath(NULL))
+				{
+					t.SetBehaviour(BEHAVIOUR_GANGSTER_FISTFIGHT);
+					t.PushActionMove(ACTION_NEWLIST, &p, TARGET_TOUCHPERSON);
+					t.PushActionFistFight(ACTION_APPEND, &p, true);		
+				}
+			}
+			else if (Chance == 2)
+			{
+				t.SetBehaviour(BEHAVIOUR_GANGSTER_FISTFIGHT);
+				t.PushActionMove(ACTION_NEWLIST, &p, TARGET_TOUCHPERSON);
+				t.PushActionFistFight(ACTION_APPEND, &p, true);
+			}
+		}
+		else
+		{
+			int Chance = Math::rand() % 2;
+			if (Chance == 0)
+			{
+				t.ClearActions();
+				t.SetBehaviour(BEHAVIOUR_GANGSTER_CIVILARMED);
+				t.SetDisableGangsterSymbol(false);
+				t.RemoveObjectPath();
+				t.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+				t.PushActionWait(ACTION_APPEND, 20.0f);
+				t.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Target, 2, false);
+				p.PushActionWait(ACTION_APPEND, 3.0f);
+				p.PushActionMove(ACTION_APPEND, &t, TARGET_FOLLOW);
+				p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+				p.PushActionArrest(ACTION_APPEND, &t, false);
+				//p.PushActionWait(ACTION_APPEND, 1.f);
+				//p.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &t, 5, false);
+			}
+			else
+			{
+				t.SetPrimaryTarget(&p);
+				p.PushActionShoot(ACTION_APPEND, Target);
+			}
+		}
+	}
+};
+
+object DummyArrest2 : CommandScript
+{
+	DummyArrest2()
+	{
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 1)
+		{
+			Person t(Target);
+			t.SetBehaviour(BEHAVIOUR_GANGSTER_ATTACKSQUAD);
+		}
+		if (childID == 2)
+		{
+			Person t(Target);
+			t.SetBehaviour(BEHAVIOUR_GANGSTER_FISTFIGHT);
+		}
+		if (childID == 3)
+		{
+			Person p(Caller);
+			p.PushActionEquipWeapon(ACTION_APPEND, false);
+			p.RemoveCommand(CMD_SHOOTGUN);
+			p.RemoveCommand(CMD_HOLSTERGUN);
+			p.AssignCommand(CMD_DRAWGUN);
+			p.RemoveCommand(CMD_ARREST2);
+			p.AssignCommand(CMD_ARREST);
+		}
+	}
+};
+

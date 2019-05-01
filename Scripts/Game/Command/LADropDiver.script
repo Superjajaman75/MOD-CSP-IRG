@@ -1,0 +1,146 @@
+//******************************************************************************************
+// #Version 1.0#
+//
+// 		Includes: Command to scare people away from the police dog
+//
+//		- VcmdDropDiver
+//
+//		Script converted by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char OBJ_DIVER[]				= "mod:Prototypes/Persons/POMPIER/plongeur.e4p";
+
+object VcmdDropDiver : CommandScript
+{
+	Vector TargetPos;
+
+	VcmdDropDiver()
+	{
+		SetCursor("dive");
+		SetIcon("dive");
+		//SetValidTargets(ACTOR_FLOOR | ACTOR_LIQUID | ACTOR_VIRTUAL);
+		SetHighlightingEnabled(false);
+		SetDeselectCaller(false);
+		SetSelfClickActivation(false);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		//SetPriority(0);
+	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+			
+		Vehicle v(Caller); 
+		PersonList l = v.GetPassengers();
+		for(int i=0; i<l.GetNumPersons(); i++)
+		if (l.GetPerson(i)->HasCommand("Dive"))
+			return true;
+				
+		if(v.HasCommand("FlyTo") && !v.IsOnGround())
+			return false;
+			
+		TargetPos = v.GetPosition();
+		if (!Game::IsWater(TargetPos))
+ 			return false;	
+			
+		return false;
+ 	} 
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+		
+		if(Caller->GetID() != Target->GetID())
+			TargetPos = Game::GetCommandPos();
+		else
+			TargetPos = Caller->GetPosition();
+		if (Game::IsWater(TargetPos))
+ 			return true;			
+ 
+ 		return false;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 0)
+		{
+			Vehicle v(Caller);
+			TargetPos = Game::GetCommandPos();
+			if (Caller->GetID() != Target->GetID())
+				v.PushActionFlyTo(ACTION_NEWLIST, TargetPos, false, -1.0f);
+			else
+				v.PushActionWait(ACTION_NEWLIST, 0.1f);
+			v.PushActionExecuteCommand(ACTION_APPEND, "VcmdDropDiver", Target, 2, false);
+			v.PushActionWait(ACTION_APPEND, 0.6f);
+			v.PushActionExecuteCommand(ACTION_APPEND, "VcmdDropDiver", Target, 1, false);			
+			v.PushActionWait(ACTION_APPEND, 1.5f);
+			v.PushActionExecuteCommand(ACTION_APPEND, "VcmdDropDiver", Target, 3, false);
+		}
+		if (childID == 1)
+		{
+			Vehicle v(Caller);
+			int Pcnt = 0;
+			PersonList l = v.GetPassengers();
+			for(int i = 0; i < l.GetNumPersons(); i++)
+			{
+				Person p = l.GetPerson(i);
+				if (Pcnt == 0 && p.HasCommand("Dive"))
+				{
+					Pcnt++;				
+					Vector Pos = v.GetPosition();
+						float r[9];
+						float childr[9];
+					v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+					float dx = 0.f, dy = -110.f, dz = 0.f;
+					Math::RotateVector(dx, dy, dz, r);
+					Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+					Math::MultiplyMatrices(childr, r);
+					Pos = Pos + Vector(dx, dy, 0);
+					v.RemovePassenger(&p);
+					p.SetPosition(Pos);
+					p.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+					p.UpdatePlacement();					
+					Person d = Game::CreatePerson(OBJ_DIVER, "Unnamed");
+					d.SetPlacement(PLACEMENT_NONE);
+					d.SetSelectable(false);
+					d.SetCommandable(false);
+					d.SetPosition(Pos);
+					d.SetAnimation("jump02");
+					d.PushActionMoveToPoint(ACTION_NEWLIST, &p, 73.0f);
+					d.PushActionExecuteCommand(ACTION_APPEND, "VcmdDropDiver", &p, 5, false);
+					p.Hide();
+				}
+			}
+		}
+		if (childID == 2)
+		{
+			Vehicle v(Caller);
+			v.SetCommandable(false);
+			v.PlayAnimOpenDoor(DAT_SPECIAL, 0.6f, Caller);
+		}
+		if (childID == 3)
+		{
+			Vehicle v(Caller);
+			v.SetCommandable(true);
+			v.PlayAnimCloseDoor(DAT_SPECIAL, 0.6f, Caller);
+		}
+		if (childID == 4)
+		{
+			Person p(Caller);
+			p.DisablePhysicsSimulation();
+			p.SetPlacement(PLACEMENT_CUSTOM_PLACEMENT);
+		}
+		if (childID == 5)
+		{
+			Person d(Caller);
+			Person p(Target);
+			d.PushActionDeleteOwner(ACTION_NEWLIST);
+			p.Show();
+		}
+  	}
+};

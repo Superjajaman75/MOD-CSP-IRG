@@ -1,0 +1,58 @@
+object LiftWithRope : CommandScript
+{
+	LiftWithRope()
+	{
+		SetCursor("liftpersonrope");
+		SetIcon("liftpersonrope");
+		SetValidTargets(ACTOR_PERSON);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_VEHICLE)
+			return false;
+		Vehicle v(Caller);
+		return !v.HasTransportOnStretcher() && v.HasEngineerOnBoard() && Game::ExistsInjuredPerson();
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() == Caller->GetID())
+			return false;
+
+		Vehicle v(Caller);
+		Person t(Target);
+		if (t.IsValid() && !t.IsDead())
+		{
+			// verletzte oder unverletzte Personen können nicht aufgenommen werden // FIXME: Kommentar???
+			Vector TargetPos = Target->GetPosition();
+			if (Game::IsWater(TargetPos, false))
+				return false;
+		}
+		if( v.IsValid() && !v.HasTransportOnStretcher() && t.IsValid() && t.IsInjured() &&
+			!t.IsCarried() && !t.IsDrowning() && t.GetEnteredHouseID() == -1 && t.GetRole()!=ROLE_ANIMAL && !t.IsRescueDog())
+		{
+			if (v.GetVehicleType() == VT_THW_FGRT_BH && !v.HasEngineerOnBoard())
+				return false;
+			return true;
+		}
+		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vector TargetPos = Target->GetPosition();
+		Caller->PushActionFlyTo(ACTION_NEWLIST, TargetPos, false, -1.0f);
+		Vehicle v(Caller);
+		Person t(Target);
+		float x, y, z;
+		t.GetLookatDir(x, y, z);
+		Vector tPos = t.GetPosition();
+		tPos.x += 100*x;
+		tPos.y += 100*y;
+		tPos.z += 100*z;
+		Caller->PushActionTurnTo(ACTION_APPEND, tPos, 3.f);
+		Caller->PushActionLiftWithRope(ACTION_APPEND, Target);  
+	}	
+};

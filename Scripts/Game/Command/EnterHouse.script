@@ -1,0 +1,124 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Firemen with attached hose can enter buildings.
+//
+//******************************************************************************************
+
+object EnterHouse : CommandScript
+{
+	Vector EntrancePos;
+
+	bool moveOut, fromDLK;
+	int h0;
+
+
+	EnterHouse()
+	{
+		SetValidTargets(ACTOR_OPEN_HOUSE);
+		SetDeselectCaller(false);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleExists(CPE_ACCESSIBLE_HOUSE);
+		SetPriority(110);
+	}
+	
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return Game::ExistsAccessibleHouse();
+	}*/
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Caller->GetType()!=ACTOR_PERSON || Target->GetType()!=ACTOR_OPEN_HOUSE)
+			return false;
+
+		OpenHouse targetHouse(Target);
+		Person person(Caller);
+
+		if (person.GetEnteredCarID() != -1 && !targetHouse.HasGroundEntrance() && person.CanEnterHouseFromDLK(&targetHouse))
+		{
+			fromDLK = true;
+			return true;
+		}
+		fromDLK = false;
+		// check if house can be entered
+		if (!targetHouse.IsValid() || targetHouse.IsOpen() || !targetHouse.HasGroundEntrance() || !targetHouse.IsFlagSet(OF_ACCESSIBLE))
+		{
+			/*if ( !targetHouse.IsValid() )
+				System::Print("EnterHouse: target house is not valid");
+			if ( targetHouse.IsOpen() )
+				System::Print("EnterHouse: door is open");
+			if ( !targetHouse.HasGroundEntrance() )
+				System::Print("EnterHouse: !targetHouse.HasGroundEntrance()");
+			if ( !targetHouse.IsFlagSet(OF_ACCESSIBLE) )
+				System::Print("EnterHouse: !targetHouse.IsFlagSet(OF_ACCESSIBLE)");*/
+			return false;
+		}
+		if(targetHouse.GetEntranceDoorID() == 0)
+		{
+			//System::Print("EnterHouse: target house has no entrance door.");
+			return false;
+		}
+
+		if (person.GetEnteredCarID() != -1)
+			return false;
+		
+		// if house is locked and caller carries an axe, ignore EnterHouse Command so that UseEquipment is the only available command
+		if (targetHouse.IsLocked() && person.GetEquipment() == EQUIP_FIREAXE)
+			return false;
+
+		// check if inside house
+		if (person.GetEnteredHouseID() != -1)
+		{
+			// check if source house has ground entrance
+			Actor ha = Game::GetActor(person.GetEnteredHouseID());
+			OpenHouse sourceHouse(&ha);
+			if (!sourceHouse.HasGroundEntrance() || sourceHouse.GetEntranceDoorID() == 0)
+			{
+			//	System::Print("EnterHouse: source house has no ground entrance");
+				return false;
+			}
+
+			moveOut = true;
+			h0 = sourceHouse.GetID();
+			EntrancePos = sourceHouse.GetEntrancePosition(false);
+		}
+		else
+			moveOut = false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		OpenHouse targetHouse(Target);
+		
+		Vector DoorFront, DoorBack;
+		
+		Vector DoorFront = targetHouse.GetEntrancePosition(true);
+		Vector DoorBack = targetHouse.GetEntrancePosition(false);
+
+		if (fromDLK)
+		{
+			Caller->PushActionEnterHouse(ACTION_NEWLIST, Target);
+			return;
+		}
+		if (moveOut)
+		{
+			Actor house = Game::GetActor(h0);
+			Caller->PushActionMove(ACTION_NEWLIST, EntrancePos, true);
+			Caller->PushActionLeaveHouse(ACTION_APPEND, &house);
+			Caller->PushActionMove(ACTION_APPEND, DoorFront, true);
+			Caller->PushActionTurnTo(ACTION_APPEND, DoorBack);
+			Caller->PushActionEnterHouse(ACTION_APPEND, Target);
+		}
+		else
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, DoorFront, true);
+			Caller->PushActionTurnTo(ACTION_APPEND, DoorBack);
+			Caller->PushActionEnterHouse(ACTION_APPEND, Target);
+		}
+	}
+};

@@ -1,0 +1,162 @@
+const char CMD_DEAD[]				= "PcmdDead";
+const char OBJ_CORONER[] 			= "mod:Prototypes/Persons/Ambulance/pompe.e4p";
+const char CMD_CHECKHEALTH[] 		= "DummyLife";
+const char HINT_DEAD_PERSONS[] 		= "La morgue ne peut transporter que des personnes mortes!";
+
+int DummyGroup = 20;
+
+object Lift : CommandScript
+{
+	Lift()
+	{
+		SetIcon("liftperson");
+		SetCursor("liftperson");
+		SetValidTargets(ACTOR_PERSON);
+		SetGroupID(CGROUP_CARRY_PERSON);
+		SetGroupLeader(true);
+		SetPriority(400);
+		SetSelfClickActivation(true);
+		SetPossibleExists(CPE_DROWNING_PERSONS | CPE_INJURED_PERSON);
+		SetPossibleEquipment(EQUIP_NONE);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if (p.IsCarryingPerson())
+			return false;
+		if (p.HasCommand("Dive"))
+			return Game::ExistsDrowningPerson();
+		return Game::ExistsInjuredPerson();
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->IsEquipped() || !Target->IsValid() || Target->GetID() == Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		Person t(Target);
+		if (StrCompare(p.GetPrototypeFileName(), OBJ_CORONER) != 0 && t.HasCommand("DummyBlanket"))
+			return false;
+		if(p.IsValid() && !p.IsCarryingPerson()&& !p.IsLinkedWithPerson() && !p.IsPulling() && t.IsValid() && t.IsInjured() && !t.IsCarried() && t.GetRole()!=ROLE_ANIMAL && !t.IsRescueDog())
+		{
+			if (p.GetEnteredCarID() != -1 && p.GetEnteredCarTargetID() != t.GetEnteredHouseID())
+				return false;
+			if (p.GetEnteredCarID() == -1 && t.GetEnteredHouseID() != -1 && t.GetEnteredHouseID() != p.GetEnteredHouseID() && !t.IsInHouseWithGroundEntrance())
+				return false;
+			// Taucher nimmt nur Ertrinkende Personen auf
+			if (p.HasCommand("Dive") && !t.IsDrowning())
+				return false;
+			if(!p.HasCommand("Dive") && t.IsDrowning())
+				return false;
+			if(p.IsCurrentAction("EActionTreatPerson"))
+				return false;
+			if(t.GetLife() < 0.99f * t.GetMaxLife() && p.IsParamedicTeam() && !t.IsDead()) //ajout de l'impossibilité de soulever une personne qui a moins de 90% par des brancardiers
+				return false;
+
+			return true;
+		}
+		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person p(Caller);
+		if(StrCompare(p.GetPrototypeFileName(), OBJ_CORONER) == 0)
+		{
+			Person pt(Target);
+			if (pt.IsClassified() && !pt.IsDead())
+			{
+				Mission::PlayHint(HINT_DEAD_PERSONS);
+				return;
+			}
+			if (p.GetEnteredCarID() == -1)
+			{
+				Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_TOUCHPERSON);
+				Caller->PushActionTurnTo(ACTION_APPEND, Target);
+				Caller->PushActionExecuteCommand(ACTION_APPEND, CMD_CHECKHEALTH, Target, 1, false);
+			} else
+			{
+				if (pt.GetEnteredHouseID() == p.GetEnteredCarTargetID())
+				{
+					Caller->PushActionEnterHouse(ACTION_NEWLIST, pt.GetEnteredHouseID());
+					Caller->PushActionMove(ACTION_APPEND, Target, TARGET_TOUCHPERSON);
+					Caller->PushActionTurnTo(ACTION_APPEND, Target);
+					Caller->PushActionExecuteCommand(ACTION_APPEND, CMD_CHECKHEALTH, Target, 1, false);
+				}
+				else
+					Caller->PushActionTurnTo(ACTION_NEWLIST, Target);
+					Caller->PushActionExecuteCommand(ACTION_APPEND, CMD_CHECKHEALTH, Target, 1, false);
+			}
+		} 
+		else
+		{
+			if (p.GetEnteredCarID() == -1)
+			{
+				if (p.HasCommand("Dive"))
+					Caller->PushActionMove(ACTION_APPEND, Target, TARGET_FOLLOW);
+				else
+					Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_TOUCHPERSON);
+				Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			}
+			else
+			{
+				Person pt(Target);
+				if (pt.GetEnteredHouseID() == p.GetEnteredCarTargetID())
+				{
+					Caller->PushActionEnterHouse(ACTION_NEWLIST, pt.GetEnteredHouseID());
+					Caller->PushActionMove(ACTION_APPEND, Target, TARGET_TOUCHPERSON);
+					Caller->PushActionTurnTo(ACTION_APPEND, Target);
+				}
+				else
+					Caller->PushActionTurnTo(ACTION_NEWLIST, Target);
+			}
+			Caller->PushActionLift(ACTION_APPEND, Target);
+		}		
+	}
+};
+
+object DummyLife : CommandScript
+{
+	DummyLife()
+	{
+		SetGroupID(DummyGroup);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		return false;
+	}
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Person t(Target);
+		if (!t.IsClassified())
+			t.SetClassified(true);
+		if (t.IsDead())
+		{
+			if (!t.HasCommand("DummyBlanket"))
+			{
+				Caller->PushActionExecuteCommand(ACTION_APPEND, CMD_DEAD, &t, 0, false);
+				return;
+			}
+			Caller->PushActionLift(ACTION_APPEND, Target);  
+		} else
+		{
+			Caller->PushActionSwitchAnim(ACTION_APPEND, "paramedicput");
+			Caller->PushActionWait(ACTION_APPEND, 0.5f);
+			Caller->PushActionSwitchAnim(ACTION_APPEND, "paramedicget");
+			Mission::PlayHint(HINT_DEAD_PERSONS);
+			return;
+		}
+	}
+};

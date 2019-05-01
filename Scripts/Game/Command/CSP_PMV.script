@@ -1,0 +1,264 @@
+const char DUMMY_FLECHEDROITE[] 		= "DUMMYFlecheDroite";
+const char DUMMY_FLECHEGAUCHE[] 		= "DUMMYFlecheGauche";
+const char CMD_PMV[] 				= "VCmdLeverPMV";
+const char CMD_REDIRECT[] 				= "VcmdDirectionalLightsOn";
+
+int DummyGroup = 20;
+ 
+// Commande du PMV Patrouiller Gcardot
+object VCmdflechedroite : CommandScript
+{
+	VCmdflechedroite()
+ 	{
+ 		SetIcon("droite");
+ 		SetCursor("speciald");
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 		if (v.HasCommand(DUMMY_FLECHEDROITE)) {
+ 			v.EnableTrafficLight(TLT_NONE);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+ 			v.RemoveCommand(DUMMY_FLECHEDROITE);
+ 			return;
+ 		}
+  
+ 		if (!v.HasCommand(DUMMY_FLECHEDROITE)) {
+ 			v.EnableTrafficLight(TLT_RED);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+ 			v.AssignCommand(DUMMY_FLECHEDROITE);
+			Game::ExecuteCommand(CMD_PMV, Caller, Target);
+  			return;
+ 		}
+		
+ 		if (childID == 1) {
+ 			v.EnableTrafficLight(TLT_RED);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+  			return;
+ 		}
+ 	}	
+ };
+ 
+  object VCmdflechegauche : CommandScript
+ {
+ 	VCmdflechegauche()
+ 	{
+ 		SetIcon("gauche");
+ 		SetCursor("specialg");
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+  			return true;
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 
+ 		if (v.HasCommand(DUMMY_FLECHEGAUCHE))
+ 		{
+ 			v.EnableTrafficLight(TLT_NONE);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+ 			v.RemoveCommand(DUMMY_FlecheGauche);
+ 			return;
+ 		}
+  
+ 		if (!v.HasCommand(DUMMY_FLECHEGAUCHE))
+ 		{
+ 			v.EnableTrafficLight(TLT_YELLOW);
+ 			v.AssignCommand(DUMMY_FLECHEGAUCHE);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+			Game::ExecuteCommand(CMD_PMV, Caller, Target);
+  			return;
+ 		}
+		
+ 		if (childID == 1)
+ 		{
+ 			v.EnableTrafficLight(TLT_YELLOW);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_REDIRECT);
+  			return;
+ 		}
+ 	}	
+ };
+ 
+ object VCmdLeverPMV : CommandScript
+{ 
+	VCmdLeverPMV()
+	{
+		SetIcon("leverpmv");
+		SetCursor("openspecialdoor");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetPossibleCallers(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(140);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		Vehicle v(Caller);
+		if (v.HasCommand("DummyHasLeverPMV"))
+			return false;
+			
+		return true;	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Vehicle v(Caller);
+		if (v.IsValid() && !v.HasCommand("DummyHasLeverPMV"))
+			return true;
+		
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		Vehicle vt(Target);
+		if (v.GetID() == vt.GetID())
+			return true;
+		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.AssignCommand("DummyHasLeverPMV");
+		v.PlayAnimOpenDoor(DAT_SPECIAL, 0.6f, Caller);
+	}
+};
+
+object VCmdBaisserPMV : CommandScript
+{ 
+	VCmdBaisserPMV()
+	{
+		SetIcon("baisserpmv");
+		SetCursor("closespecialdoor");
+		SetValidTargets(ACTOR_VEHICLE);
+		SetPossibleCallers(ACTOR_VEHICLE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetGroupID(140);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		Vehicle v(Caller);
+		if (v.HasCommand("DummyHasLeverPMV"))
+			return true;
+			
+		return false;	
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Vehicle v(Caller);
+		if (v.IsValid() && v.HasCommand("DummyHasLeverPMV"))
+			return true;
+		
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		Vehicle vt(Target);
+		if (v.GetID() == vt.GetID())
+		{
+			if (v.HasCommand("DummyHasLeverPMV"))
+				return true;
+		}
+	
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		v.RemoveCommand("DummyHasLeverPMV");
+		v.PlayAnimCloseDoor(DAT_SPECIAL, 0.6f, Caller);
+		v.EnableTrafficLight(TLT_NONE);
+		if (v.HasCommand(DUMMY_FLECHEDROITE))
+		{
+			v.PushActionExecuteCommand(ACTION_NEWLIST, "VcmdDirectionalLightsOff");
+ 			v.RemoveCommand(DUMMY_FLECHEDROITE);
+		}
+		if (v.HasCommand(DUMMY_FLECHEGAUCHE))
+		{
+			v.PushActionExecuteCommand(ACTION_NEWLIST, "VcmdDirectionalLightsOff");
+ 			v.RemoveCommand(DUMMY_FLECHEGAUCHE);
+		}	
+	}
+};
+
+object DummyHasLeverPMV : CommandScript
+{
+ 	DummyHasLeverPMV() { SetGroupID(20); }
+ 
+ 	bool CheckGroupVisibility(GameObject *Caller) { return false; } 
+ 	bool CheckPossible(GameObject *Caller) { return false; }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID) { return false; }
+ 	void PushActions(GameObject *Caller, Actor *Target, int childID) { }
+};
+ 
+object DUMMYFlecheDroite : CommandScript
+{
+ 	DUMMYFlecheDroite() { SetGroupID(DummyGroup); }
+ 	bool CheckGroupVisibility(GameObject *Caller) { return false;}
+ 	bool CheckPossible(GameObject *Caller) { return false; }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID) { return false; }
+ 	void PushActions(GameObject *Caller, Actor *Target, int childID)	{}
+};
+
+object DUMMYFlecheGauche : CommandScript
+{
+ 	DUMMYFlecheGauche() { SetGroupID(DummyGroup); }
+ 	bool CheckGroupVisibility(GameObject *Caller) { return false;}
+ 	bool CheckPossible(GameObject *Caller) { return false; }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID) { return false; }
+ 	void PushActions(GameObject *Caller, Actor *Target, int childID)	{}
+};
+

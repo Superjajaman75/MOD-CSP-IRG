@@ -1,0 +1,47 @@
+object UseRoadBlock : CommandScript
+{
+	UseRoadBlock()
+	{
+		SetValidTargets(ACTOR_FLOOR|ACTOR_OBJECT);
+		//SetValidTargets(ACTOR_PERSON);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPossibleEquipment(EQUIP_ROADBLOCK);
+		SetPriority(700);
+		SetSelfClickActivation(true);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON || Caller->GetEquipment()!=EQUIP_ROADBLOCK)
+			return false;
+		return true;
+	}*/
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if(!Caller->IsValid() || Caller->GetEquipment()!=EQUIP_ROADBLOCK || Caller->GetID()==Target->GetID())
+		//if(!Caller->IsValid() || Caller->GetEquipment()!=EQUIP_ROADBLOCK || Caller->GetID()==Target->GetID())
+			return false;			
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+		if (Target->IsValid() && Target->GetType() == ACTOR_OBJECT)
+		{
+			GameObject target(Target);
+			if(!target.IsBridge())
+				return false;
+		}
+		Person p(Caller);
+		if(p.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		if (Caller->GetID() == Target->GetID())
+		   	Caller->PushActionUseEquipment(ACTION_NEWLIST, Target, ChildID, 3.f); // Target, Child and Time does not matter
+		else
+			Caller->PushActionUseEquipment(ACTION_NEWLIST, Game::GetCommandPos(), 3.f);	
+	}
+};

@@ -1,0 +1,44 @@
+const char NAME_CSP_ROOF[]		= "csp_roof";
+
+object Toit : CommandScript
+{
+	Toit()
+	{
+		SetIcon("toit");
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid())
+			return false;
+
+		if (Caller->GetPlayerMP() != 0 && Game::IsMultiplayer()) 
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID() != Target->GetID()))
+			return false;
+		
+		if (Caller->GetPlayerMP() != 0 && Game::IsMultiplayer()) 
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		GameObjectList l1 = Game::GetGameObjects(NAME_CSP_ROOF);
+		for(int i=0; i < l1.GetNumObjects(); i++)
+		{
+			GameObject *obj = l1.GetObject(i);
+			if(obj->IsHidden())
+				obj->Show(); 
+			else
+				obj->Hide(); 
+		}
+	}
+};

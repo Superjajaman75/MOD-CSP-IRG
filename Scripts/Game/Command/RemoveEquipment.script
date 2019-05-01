@@ -1,0 +1,63 @@
+//******************************************************************************************
+// #Version 1.2#
+//
+// 		Changes: - Use equipment commands will be removed.
+//
+//******************************************************************************************
+
+const char DUMMY_EQUIPMENT[] 		= "DummyEquipmentCommands";
+
+object RemoveEquipment: CommandScript
+{
+	RemoveEquipment()
+	{
+		SetIcon("drop");
+		SetCursor("drop");
+		SetValidTargets(ACTOR_PERSON);
+		SetDoubleClickable(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetNeedsConnectedHose(CFN_FAIL);
+		SetDeselectCaller(false);
+		SetPriority(600);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if(p.IsCommandEnabled("HolsterWeapon") && p.GetEquipment() == EQUIP_PISTOL)
+			return false;
+		if (p.GetEquipment() == EQUIP_REDIRECTSIGN)
+			return false;
+		return p.GetEquipment()!=EQUIP_NONE;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Caller->GetID()!=Target->GetID() || Caller->GetFirehoseID()!=0)
+			return false;
+			
+		if (Caller->GetType() != ACTOR_PERSON)
+			return false;
+			
+		Person p(Caller);
+		if(p.GetEnteredCarID() != -1)
+			return false;
+		if(p.IsCommandEnabled("HolsterWeapon") && p.GetEquipment() == EQUIP_PISTOL)
+			return false;
+		if (p.GetEquipment() == EQUIP_REDIRECTSIGN)
+			return false;
+			
+		if (Caller->GetObjectType()==TYPE_PERSON && Caller->GetEquipment()!=EQUIP_NONE)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionExecuteCommand(ACTION_NEWLIST, DUMMY_EQUIPMENT, Target, 10, false);
+		Caller->PushActionRemoveEquipment(ACTION_APPEND);
+	}
+};

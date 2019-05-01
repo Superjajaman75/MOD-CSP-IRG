@@ -1,0 +1,555 @@
+const char CMD_SIREN[]				= "VcmdSiren";
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char CMD_WARNINGLIGHTS_OFF[] 		= "VcmdWarningLightsOff";
+const char CMD_WARNINGLIGHTS_ON[] 		= "VcmdWarningLightsOn";
+const char CMD_FLOODLIGHTS_OFF[] 		= "VcmdFloodLightsOff";
+const char CMD_FLOODLIGHTS_ON[] 		= "VcmdFloodLightsOn";
+const char CMD_STANDBY_ON[]			= "VcmdStandbyOn";
+const char CMD_STANDBY_OFF[]			= "VcmdStandbyOff";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char DUMMY_PATROL[] 			= "DummyPatrol";
+
+const char PROTO_VSAV1[] 				= "mod:Prototypes/Vehicles/Fire Department/vsav1master.e4p";
+const char PROTO_VSAV2[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavDouai.e4p";
+const char PROTO_VSAV3[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
+const char PROTO_VLI1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
+const char PROTO_VLI2[] 				= "mod:Prototypes/Vehicles/Fire Department/VLI1.e4p";
+const char PROTO_FPT1[] 				= "mod:Prototypes/Vehicles/Fire Department/fptscanianouveau.e4p";
+const char PROTO_FPT2[] 				= "mod:Prototypes/Vehicles/Fire Department/FPT6.e4p";
+const char PROTO_FPT3[] 				= "mod:Prototypes/Vehicles/Fire Department/FPT3.e4p";
+const char PROTO_FPTL[] 				= "mod:Prototypes/Vehicles/Fire Department/FPTL68.e4p";
+
+
+const char VO_SQUADCSP[] 				= "vo_squad_csp";
+const char VO_SQUADCPI[] 				= "vo_squad_cpi";
+const char VO_SQUADPOL[] 				= "vo_squad_pol";
+const char VO_SQUADTEC[] 				= "vo_squad_tec";
+const char VO_SQUADSAMU[] 			= "vo_squad_samu";
+
+const char HINT_FEULEGER[] 				= "DEPART FEU LEGER ! FPT";
+const char HINT_NORMAL[] 				= "DEPART NORMAL ! FPT1 - FPT2 - EPA - EMOD4 - VSAV";
+const char HINT_FEULOURD[] 				= "DEPART FEU LOURD ! FPT1 - FPT2 - EPA - EMOD4 - VLI - VSAV - EMOD3";
+const char HINT_SRM[] 					= "DEPART SECOURS ROUTIER MOYEN ! VSR - VSAV1 et 2 - EMOD4";
+const char HINT_SRLO[] 					= "DEPART SECOURS ROUTIER LOURD ! VSR - VSAV1, 2 et 3 - EMOD4 - VLI - VLC - EMOD3";
+const char HINT_SRA[] 					= "DEPART SECOURS ROUTIER AQUATIQUE ! VSR - VSAV - EMOD4 - VPL";
+const char HINT_UM[] 					= "DEPART URGENCE MEDICAL ! VSAV - VLI";
+const char HINT_SM[] 					= "DEPART SECOURS MEDICAL ! VSAV";
+const char HINT_FEUINDUS[] 				= "DEPART FEU INDUSTRIE ! FPT1 - FPT2 - EPA - EMOD4 - VSAV - VLI - VLC - EMOD3 - FC - CCGC - CDHR";
+const char HINT_SUICIDE[] 				= "DEPART TENTATIVE SUICIDE ! VPL - VSAV - VLI - EMOD4";
+const char HINT_EXPLO[] 				= "PLAN FEUX EXPLOSION ! FPT1 - FPT2 - FPT3 - EPA - EMOD4 - EMOD3 - FC - VSAV";
+const char HINT_FEVL[]					= "FEUX VEHICULE LEGER ! FPT - EMOD4";
+const char HINT_GIFF[]					= "GROUPE INTERVENTION FEU FORET ! VLTT - VTU - CCFM - CCFS";
+
+	
+const char SND_FEUXLEGER[]						= "mod:Audio/FX/depart/depart_feuleger.wav";
+const char SND_NORMAL[]							= "mod:Audio/FX/depart/normal.wav";
+const char SND_FEULOURD[]						= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_SECOURROUTIERMOYEN[]				= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_SECOUROUTIERLOURD[]				= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_SECOUROUTIERAQUATIQUE[]			= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_URGENCEMEDICALE[]				= "mod:Audio/FX/depart/depart_vsav.wav";
+const char SND_SECOURSMEDICALE[]				= "mod:Audio/FX/depart/depart_vsav.wav";
+const char SND_FEUINDUSTRIE[]					= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_TENTATIVEDESUICIDE[]				= "mod:Audio/FX/depart/feu_1.wav";	
+const char SND_FEUXEXPLOSION[]					= "mod:Audio/FX/depart/feu_1.wav";
+const char SND_FEUVEHICULELEGER[]				= "mod:Audio/FX/depart/feu_vl.wav";
+
+
+object FeuLeger : CommandScript
+{
+	FeuLeger()
+	{
+		SetIcon("FL");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{	
+		Mission::PlayHint(HINT_FEULEGER);
+		Audio::PlaySample3D(SND_FEUXLEGER, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+	}
+};
+
+object DepartNormal : CommandScript
+{
+	DepartNormal()
+	{
+		SetIcon("NOR");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+		
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_NORMAL);
+		Audio::PlaySample3D(SND_NORMAL, Caller->GetPosition());
+
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+		Game::ExecuteCommand("Renfort_FPT2", Caller);
+		Game::ExecuteCommand("Renfort_EPA", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object DepartFeuLourd : CommandScript
+{
+	DepartFeuLourd()
+	{
+		SetIcon("FI");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_FEULOURD);	
+		Audio::PlaySample3D(SND_FEULOURD, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+		Game::ExecuteCommand("Renfort_FPT2", Caller);
+		Game::ExecuteCommand("Renfort_EPA", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_VLI1", Caller);
+		Game::ExecuteCommand("Renfort_EMOD3", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+object SecoursRoutierMoyen : CommandScript
+{
+	SecoursRoutierMoyen()
+	{
+		SetIcon("SRM");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+		SetDeselectCaller(false);
+		SetSelfClickActivation(true);
+		SetHighlightingEnabled(false);
+ 		SetGroupLeader(true);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_SRM);	
+		Audio::PlaySample3D(SND_SECOURROUTIERMOYEN, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_FSR", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+		Game::ExecuteCommand("Renfort_VSAV2", Caller);
+	}
+};
+
+object SecoursRoutierLourd : CommandScript
+{
+	SecoursRoutierLourd()
+	{
+		SetIcon("SRLo");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+	
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_SRLO);
+		Audio::PlaySample3D(SND_SECOUROUTIERLOURD, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+		Game::ExecuteCommand("Renfort_VSAV2", Caller);
+		Game::ExecuteCommand("Renfort_VSAV3", Caller);
+		Game::ExecuteCommand("Renfort_FSR", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_EMOD3", Caller);
+		Game::ExecuteCommand("Renfort_VLI1", Caller);
+		Game::ExecuteCommand("Renfort_VLC", Caller);	
+	}
+};
+
+object SecoursRoutierAquatique: CommandScript
+{
+	SecoursRoutierAquatique()
+	{
+		SetIcon("SRA");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_SRA);
+		Audio::PlaySample3D(SND_SECOUROUTIERAQUATIQUE, Caller->GetPosition());
+		
+	
+		Game::ExecuteCommand("Renfort_FSR", Caller);
+		Game::ExecuteCommand("Renfort_VPL", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);		
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object UrgenceMedicale: CommandScript
+{
+	UrgenceMedicale()
+	{
+		SetIcon("UM");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_UM);
+		Audio::PlaySample3D(SND_URGENCEMEDICALE, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_VLI1", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object SecoursMedical: CommandScript
+{
+	SecoursMedical()
+	{
+		SetIcon("SM");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_SM);
+		Audio::PlaySample3D(SND_SECOURSMEDICALE, Caller->GetPosition());
+		
+		Caller->PushActionExecuteCommand(ACTION_NEWLIST, "Renfort_VSAV"); 
+		//Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object FeuIndustrie: CommandScript
+{
+	FeuIndustrie()
+	{
+		SetIcon("industrie");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_FEUINDUS);
+		Audio::PlaySample3D(SND_FEUINDUSTRIE, Caller->GetPosition());
+
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+		Game::ExecuteCommand("Renfort_FPT2", Caller);
+		Game::ExecuteCommand("Renfort_EPA", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_VLI1", Caller);
+		Game::ExecuteCommand("Renfort_VLC", Caller);
+		Game::ExecuteCommand("Renfort_EMOD3", Caller);
+		Game::ExecuteCommand("Renfort_FC", Caller);
+		Game::ExecuteCommand("Renfort_CCGC", Caller);
+		Game::ExecuteCommand("Renfort_CDHR", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);	
+	}
+};
+
+object TentativeSuicide: CommandScript
+{
+	TentativeSuicide()
+	{
+		SetIcon("TS");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+	
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_SUICIDE);
+		Audio::PlaySample3D(SND_TENTATIVEDESUICIDE, Caller->GetPosition());	
+		
+		Game::ExecuteCommand("Renfort_VPL", Caller);
+		Game::ExecuteCommand("Renfort_VLI1", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object PlanFeuxExplosion: CommandScript
+{
+	PlanFeuxExplosion()
+	{
+		SetIcon("PFE");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_EXPLO);
+		Audio::PlaySample3D(SND_FEUXEXPLOSION, Caller->GetPosition());
+				
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+		Game::ExecuteCommand("Renfort_FPT2", Caller);
+		Game::ExecuteCommand("Renfort_FPT3", Caller);
+		Game::ExecuteCommand("Renfort_EPA", Caller);
+		Game::ExecuteCommand("Renfort_EMOD3", Caller);
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_FC", Caller);
+		Game::ExecuteCommand("Renfort_VSAV", Caller);
+	}
+};
+
+object FeuVehiculeLeger: CommandScript
+{
+	FeuVehiculeLeger()
+	{
+		SetIcon("FVL");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_FEVL);
+		Audio::PlaySample3D(SND_FEUVEHICULELEGER, Caller->GetPosition());
+		
+		Game::ExecuteCommand("Renfort_EMOD4", Caller);
+		Game::ExecuteCommand("Renfort_FPT1", Caller);
+	}
+};
+
+object Giff: CommandScript
+{
+	Giff()
+	{
+		SetIcon("GIFF");
+		SetCursor("callassistance");
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if (!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || Caller->GetID() == Target->GetID())
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		Mission::PlayHint(HINT_GIFF);
+		
+		Game::ExecuteCommand("Renfort_VLTT", Caller);
+		Game::ExecuteCommand("Renfort_VTU", Caller);
+		Game::ExecuteCommand("Renfort_CCFM", Caller);
+		Game::ExecuteCommand("Renfort_CCFM", Caller);
+		Game::ExecuteCommand("Renfort_CCFM", Caller);
+		Game::ExecuteCommand("Renfort_CCFS", Caller);
+	}
+};

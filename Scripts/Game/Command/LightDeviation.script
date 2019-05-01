@@ -1,0 +1,155 @@
+const char DUMMY_HASHeckg[] 			= "DUMMYHasHeckg";
+const char DUMMY_HASHeckd[] 			= "DUMMYHasHeckd";
+const char CMD_ON[] 					= "VcmdDirectionalLightsOn";
+const char CMD_OFF[] 					= "VcmdDirectionalLightsOff";
+
+int DummyGroup = 20;
+
+object VCmdGauche : CommandScript
+ {
+ 	VCmdGauche()
+ 	{
+ 		SetIcon("specialg");
+ 		SetCursor("specialg");
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 
+ 		if (v.HasCommand(DUMMY_HASHeckg))
+ 		{
+ 			v.EnableTrafficLight(TLT_NONE);
+			Game::ExecuteCommand(CMD_OFF, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_OFF);
+ 			v.RemoveCommand(DUMMY_HASHeckg);
+ 			return;
+ 		}
+  
+ 		if (!v.HasCommand(DUMMY_HASHeckg))
+ 		{
+ 			v.EnableTrafficLight(TLT_YELLOW);
+			Game::ExecuteCommand(CMD_ON, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_ON);
+ 			v.AssignCommand(DUMMY_HASHeckg);
+  			return;
+ 		}
+		
+ 		if (childID == 1)
+ 		{
+ 			v.EnableTrafficLight(TLT_YELLOW);
+			Game::ExecuteCommand(CMD_ON, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_ON);
+  			return;
+ 		}
+ 	}	
+ };
+
+
+
+ object VCmdDroite : CommandScript
+ {
+ 	VCmdDroite()
+ 	{
+ 		SetIcon("speciald");
+ 		SetCursor("speciald");
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 			return true;
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+ 
+ 		if (v.HasCommand(DUMMY_HASHeckd))
+ 		{
+ 			v.EnableTraffic Light(TLT_NONE);
+			Game::ExecuteCommand(CMD_OFF, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_OFF);
+ 			v.RemoveCommand(DUMMY_HASHeckd);
+ 			return;
+ 		}
+  
+ 		if (!v.HasCommand(DUMMY_HASHeckd))
+ 		{
+ 			v.EnableTraffic Light(TLT_RED);
+			Game::ExecuteCommand(CMD_ON, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_ON);
+ 			v.AssignCommand(DUMMY_HASHeckd);
+  			return;
+ 		}
+		
+ 		if (childID == 1)
+ 		{
+ 			v.EnableTraffic Light(TLT_RED);
+			Game::ExecuteCommand(CMD_ON, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_ON);
+  			return;
+ 		}
+ 	}	
+ };
+
+ object DUMMYHasHeckd : CommandScript
+ {
+ 	DUMMYHasHeckd() { SetGroupID(DummyGroup);}
+ 	bool CheckGroupVisibility(GameObject *Caller) { return false;}
+ 	bool CheckPossible(GameObject *Caller) { return false; }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID) {return false;}
+ 	void PushActions(GameObject *Caller, Actor *Target, int childID) { }
+ };
+ 
+  object DUMMYHasHeckg : CommandScript
+ {
+ 	DUMMYHasHeckg() { SetGroupID(DummyGroup);}
+ 	bool CheckGroupVisibility(GameObject *Caller) { return false;}
+ 	bool CheckPossible(GameObject *Caller) { return false; }
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID) {return false;}
+ 	void PushActions(GameObject *Caller, Actor *Target, int childID) { }
+ };
+ 
+ 
+ 

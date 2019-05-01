@@ -1,0 +1,316 @@
+//******************************************************************************************
+//
+//		Script Renfort Toutes unités
+//		Inspiré de Hoppah
+//		Edité par Superjajaman75 pour MOD CSP-IRG
+//
+//******************************************************************************************
+
+const char PROTO_VSAV1[] 				= "mod:Prototypes/Vehicles/Fire Department/vsav1master.e4p";
+const char PROTO_VSAV2[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavDouai.e4p";
+const char PROTO_VSAV3[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
+const char PROTO_VSAV4[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p";
+const char PROTO_VSAVHR[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p";
+const char PROTO_VSS[] 					= "mod:Prototypes/Vehicles/Fire Department/VSS_HD.e4p";
+const char PROTO_VLI1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
+
+const char PROTO_VTP[] 					= "mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p";
+const char PROTO_VTU1[]					= "mod:Prototypes/Vehicles/Fire Department/2.e4p";
+const char PROTO_VTU2[]					= "mod:Prototypes/Vehicles/Fire Department/VTU.e4p";
+const char PROTO_CCFM[]					= "mod:Prototypes/Vehicles/Fire Department/CCF1.e4p";
+const char PROTO_CCFS[]					= "mod:Prototypes/Vehicles/Fire Department/CCFS1.e4p";
+const char PROTO_CCGC1[] 				= "mod:Prototypes/Vehicles/Fire Department/ccgc.e4p";
+const char PROTO_CCRM[] 				= "mod:Prototypes/Vehicles/Fire Department/nouveauccr.e4p";
+const char PROTO_CDHR[] 				= "mod:Prototypes/Vehicles/Fire Department/CDHR.e4p";
+const char PROTO_CMIC1[]				= "mod:Prototypes/Vehicles/Fire Department/VIRT2.e4p";
+const char PROTO_VRAAD[]				= "mod:Prototypes/Vehicles/Fire Department/vraad.e4p";
+const char PROTO_EMOD4[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD4.e4p";
+const char PROTO_EMOD3[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD32.e4p";
+const char PROTO_VLTT[]					= "mod:Prototypes/Vehicles/Fire Department/vl9.e4p";
+const char PROTO_EPA1[] 				= "mod:Prototypes/Vehicles/Fire Department/EPA_Scania.e4p";
+const char PROTO_FC1[] 					= "mod:Prototypes/Vehicles/Fire Department/FCnoinstal.e4p";
+const char PROTO_FPT1[] 				= "mod:Prototypes/Vehicles/Fire Department/fptscanianouveau.e4p";
+const char PROTO_FPT2[] 				= "mod:Prototypes/Vehicles/Fire Department/FPT6.e4p";
+const char PROTO_FPT3[] 				= "mod:Prototypes/Vehicles/Fire Department/FPT3.e4p";
+const char PROTO_FPTL[] 				= "mod:Prototypes/Vehicles/Fire Department/FPTL68.e4p";
+const char PROTO_FSR1[] 				= "mod:Prototypes/Vehicles/Fire Department/FSR2.e4p";
+const char PROTO_VPC[] 					= "mod:Prototypes/Vehicles/Fire Department/vpc-redeployer.e4p";
+const char PROTO_PMA[] 					= "mod:Prototypes/Vehicles/Fire Department/PMA.e4p";
+const char PROTO_VLC1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLC.e4p";
+const char PROTO_VPL1[] 				= "mod:Prototypes/Vehicles/Fire Department/vpl_HD.e4p";
+
+
+
+
+const char PROTO_DEP[] 					= "mod:Prototypes/Vehicles/TEC/depaneuse1.e4p";
+const char PROTO_EDF[] 					= "mod:Prototypes/Vehicles/TEC/erdf.e4p";
+const char PROTO_GRUE[] 				= "mod:Prototypes/Vehicles/Sonstiges/Kran.e4p";
+const char PROTO_SAN1[] 				= "mod:Prototypes/Vehicles/TEC/Sanef01.e4p";
+const char PROTO_SAN2[] 				= "mod:Prototypes/Vehicles/TEC/VP8.e4p";
+
+
+const char PROTO_UMH1[] 				= "mod:Prototypes/Vehicles/Ambulance/ARValenciennes.e4p";
+const char PROTO_UMH2[] 				= "mod:Prototypes/Vehicles/Ambulance/ARSmur28.e4p";
+const char PROTO_VLM1[]					= "mod:Prototypes/Vehicles/Ambulance/va.e4p";
+const char PROTO_VLM2[]					= "mod:Prototypes/Vehicles/Ambulance/vlmdouai.e4p";
+const char PROTO_VLM3[]					= "mod:Prototypes/Vehicles/Ambulance/S-Max_2010_NEF.e4p";
+const char PROTO_PF1[]					= "mod:Prototypes/Vehicles/Ambulance/PF_FOURGON1.e4p";
+const char PROTO_PF2[]					= "mod:Prototypes/Vehicles/Ambulance/PF_FOURGON2.e4p";
+const char PROTO_DRAGON[]				= "mod:Prototypes/Vehicles/Ambulance/Dragon62.e4p";
+
+
+const char PROTO_AUDI[]					= "mod:Prototypes/Vehicles/Police/Audi_A6.e4p";
+const char PROTO_BERLINGO[]				= "mod:Prototypes/Vehicles/Police/berlingo.e4p";
+const char PROTO_BUSCRS[]				= "mod:Prototypes/Vehicles/Police/buscrs.e4p";
+const char PROTO_C4BANA[]				= "mod:Prototypes/Vehicles/Police/c4_bana.e4p";
+const char PROTO_C4GN[]					= "mod:Prototypes/Vehicles/Police/c4_gn.e4p";
+const char PROTO_CANONCRS[]				= "mod:Prototypes/Vehicles/Police/CANONCRS.e4p";
+const char PROTO_DEMINAGE[]				= "mod:Prototypes/Vehicles/Police/deminage2.e4p";
+const char PROTO_ECUREUIL[]				= "mod:Prototypes/Vehicles/03 LA Police/as350_lapd.e4p";
+const char PROTO_ESTATEGN[]				= "mod:Prototypes/Vehicles/Police/estategendarmerie.e4p";
+const char PROTO_ESTATEPN[]				= "mod:Prototypes/Vehicles/Police/estatepn.e4p";
+const char PROTO_FOCUS[]				= "mod:Prototypes/Vehicles/Police/ford_focusrs.e4p";
+const char PROTO_TEPEEGN[]				= "mod:Prototypes/Vehicles/Police/fp4v2.e4p";
+const char PROTO_BAC[]					= "mod:Prototypes/Vehicles/Police/golf_bac.e4p";
+const char PROTO_IVECO[]				= "mod:Prototypes/Vehicles/Police/Ivecogendarmerie.e4p";
+const char PROTO_KANGOOGN[]				= "mod:Prototypes/Vehicles/Police/Kangoo1.e4p";
+const char PROTO_MASTERCRS[]			= "mod:Prototypes/Vehicles/Police/Master_CRS.e4p";
+const char PROTO_MASTER[]				= "mod:Prototypes/Vehicles/Police/Master_PNfourgon.e4p";
+const char PROTO_MASTERBAL[]			= "mod:Prototypes/Vehicles/Police/master_policebalisage.e4p";
+const char PROTO_MEGANE[]				= "mod:Prototypes/Vehicles/Police/MeganeRS.e4p";
+const char PROTO_308[]					= "mod:Prototypes/Vehicles/Police/peugeot308.e4p";
+const char PROTO_SUBARU[]				= "mod:Prototypes/Vehicles/Police/Subaru.e4p";
+const char PROTO_TEPEEPM[]				= "mod:Prototypes/Vehicles/Police/TepeePolm.e4p";
+const char PROTO_CLIOPM[]				= "mod:Prototypes/Vehicles/Police/cliopolm.e4p";
+const char PROTO_TRAFICGN[]				= "mod:Prototypes/Vehicles/Police/trafic.e4p";
+const char PROTO_TRAFICCRS[]			= "mod:Prototypes/Vehicles/Police/traficpn1.e4p";
+const char PROTO_TRAFICPN[]				= "mod:Prototypes/Vehicles/Police/traficpnhd.e4p";
+const char PROTO_TRANSITCRS[]			= "mod:Prototypes/Vehicles/Police/TRANSIT_crs.e4p";
+const char PROTO_TRANSITPN[]			= "mod:Prototypes/Vehicles/Police/transit-pn.e4p";
+const char PROTO_SCENIC[]				= "mod:Prototypes/Vehicles/Police/VP_Scenic.e4p";
+const char PROTO_GETAWAY[]				= "mod:Prototypes/Vehicles/Police/getawaycar.e4p";
+const char PROTO_MOTOGN[]				= "mod:Prototypes/Vehicles/Police/BMW1200RT.e4p";
+const char PROTO_MOTOPN[]				= "mod:Prototypes/Vehicles/Police/BMW1200RTPN.e4p";
+
+const char UNNAMED[] 					= "Unnamed";
+
+
+
+class ClassSpawn: CommandScript
+{
+
+	void Create(GameObject *Caller, char PROTO[], char NAME[],  int NbMaxPassager, int NbMaxTransport)
+	{
+		GameObjectList vehList(NAME);
+		GameObject veh;
+		
+		if (vehList.GetNumObjects() == 1)
+		{
+			veh = vehList.GetObject(0);			
+			Vector vehPos = veh.GetPosition();
+			float r[9];
+			veh.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+
+			
+			Vehicle newVeh = Game::CreateVehicle(PROTO, UNNAMED);
+			
+			newVeh.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+			newVeh.SetPosition(vehPos);
+			newVeh.UpdatePlacement();
+			newVeh.SetMaxPassengers(NbMaxPassager);
+			newVeh.SetMaxTransports(NbMaxTransport);			
+			newVeh.SetPlayerMP(Caller->GetPlayerMP());
+			newVeh.EnableBlueLights(false);
+			newVeh.EnableHeadLights(false);
+		} else {
+			System::Log("[INIT] veh non trouve");
+		}
+		
+		
+	}
+};
+
+object Init_CSP : CommandScript
+{
+	Init_CSP()
+	{
+		SetIcon("csp_init");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+	bool CheckPossible(GameObject *Caller) { 
+		if (Game::IsCampaign() || Game::IsMission()) 
+			return false; 
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ClassSpawn::Create(Caller, PROTO_EMOD4,  "emod4", 1, 0);
+		ClassSpawn::Create(Caller, PROTO_EMOD3,  "emod3", 1, 0);
+		ClassSpawn::Create(Caller, PROTO_VLC1,  "vlc", 1, 0);
+		ClassSpawn::Create(Caller, PROTO_VRAAD,  "vrad", 3, 2);
+		ClassSpawn::Create(Caller, PROTO_CMIC1,  "cmic", 3, 2);
+		ClassSpawn::Create(Caller, PROTO_VTU2,  "vtu", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VTU1,  "vrid", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VTP,  "vtp", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_VPL1,  "vpl", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_CCGC1,  "ccgc", 2, 0);
+		ClassSpawn::Create(Caller, PROTO_FC1,  "fc", 4, 0);
+		ClassSpawn::Create(Caller, PROTO_CDHR,  "cdhr", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_EPA1,  "epa", 2, 0);
+		ClassSpawn::Create(Caller, PROTO_CCRM,  "ccrm", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_FPT1,  "fpt1", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_FSR1,  "vsr", 4, 0);
+		ClassSpawn::Create(Caller, PROTO_FPT2,  "fpt2", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_FPT3,  "fpt3", 6, 0);
+		
+		if (Game::IsFreeplay())
+		{
+			GameObjectList vehList("vpc");
+			
+			if (vehList.GetNumObjects() == 1)
+			{
+				GameObject veh = vehList.GetObject(0);			
+				Vector vehPos = veh.GetPosition();
+				float r[9];
+				veh.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+
+				Vehicle m = Game::CreateVehicle(PROTO_VPC, UNNAMED);
+				m.EnableBlueLights(false);
+				m.EnableHeadLights(false);
+				m.SetPosition(vehPos);
+				m.SetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+				m.UpdatePlacement();
+				m.SetMaxPassengers(6);
+				m.PushActionWait(ACTION_NEWLIST, 1.0f);
+				m.AssignCommand("MoveTo");
+				Person p1;
+				Person p2;
+				Person p3;
+				Person p4;
+				Person p5;
+				p1 = Game::CreatePerson("mod:Prototypes/Persons/Fire Department/SP_COS.e4p", UNNAMED);
+				p2 = Game::CreatePerson("mod:Prototypes/Persons/Ambulance/cosa.e4p", UNNAMED);
+				p3 = Game::CreatePerson("mod:Prototypes/Persons/Police/cosg.e4p", UNNAMED);
+				p4 = Game::CreatePerson("mod:Prototypes/Persons/Police/cosp.e4p", UNNAMED);
+				p5 = Game::CreatePerson("mod:Prototypes/Persons/TEC/cost.e4p", UNNAMED);
+				p1.SetPlayerMP(Caller->GetPlayerMP());
+				p2.SetPlayerMP(Caller->GetPlayerMP());
+				p3.SetPlayerMP(Caller->GetPlayerMP());
+				p4.SetPlayerMP(Caller->GetPlayerMP());
+				p5.SetPlayerMP(Caller->GetPlayerMP());
+				m.AddPassenger(&p1);
+				m.AddPassenger(&p2);
+				m.AddPassenger(&p3);
+				m.AddPassenger(&p4);
+				m.AddPassenger(&p5);
+				Game::AddToGroup(&p1, 0);
+				Game::AddToGroup(&p2, 3);
+				Game::AddToGroup(&p3, 2);
+				Game::AddToGroup(&p4, 1);
+				Game::AddToGroup(&p5, 4);
+			}
+		}
+	}
+};
+
+object Init_MEDSP : CommandScript
+{
+	Init_MEDSP()
+	{
+		SetIcon("med_sp_init");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+	bool CheckPossible(GameObject *Caller) { 
+		if (Game::IsCampaign() || Game::IsMission()) 
+			return false; 
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ClassSpawn::Create(Caller, PROTO_VSS,  "vss", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VSAV1,  "vsav1", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VSAV2,  "vsav2", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VSAV3,  "vsav3", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VSAV4,  "vsav4", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VSAVHR,  "vsavhr", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VLI1,  "vli", 3, 0);
+	}
+};
+
+object Init_CPI : CommandScript
+{
+	Init_CPI()
+	{
+		SetIcon("cpi_init");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+	bool CheckPossible(GameObject *Caller) { 
+		if (Game::IsCampaign() || Game::IsMission()) 
+			return false; 
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ClassSpawn::Create(Caller, PROTO_CCFS,  "ccfs", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_CCFM,  "ccfm", 6, 0);
+		ClassSpawn::Create(Caller, PROTO_FPTL,  "fptl", 5, 0);
+		ClassSpawn::Create(Caller, PROTO_VLTT,  "vltt", 1, 0);
+	}
+};
+
+object Init_SMUR : CommandScript
+{
+	Init_SMUR()
+	{
+		SetIcon("smur_init");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+	bool CheckPossible(GameObject *Caller) { 
+		if (Game::IsCampaign() || Game::IsMission()) 
+			return false; 
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ClassSpawn::Create(Caller, PROTO_VLM1,  "vlm1", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VLM2,  "vlm2", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VLM3,  "vlm3", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_UMH1,  "umh1", 2, 1);
+		ClassSpawn::Create(Caller, PROTO_UMH2,  "umh2", 2, 1);
+	}
+};
+
+object Init_TEC : CommandScript
+{
+	Init_TEC()
+	{
+		SetIcon("tec_init");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+	bool CheckPossible(GameObject *Caller) { 
+		if (Game::IsCampaign() || Game::IsMission()) 
+			return false; 
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		ClassSpawn::Create(Caller, PROTO_GRUE,  "grue", 1, 0);
+		ClassSpawn::Create(Caller, PROTO_SAN1,  "sanef1", 2, 0);
+		ClassSpawn::Create(Caller, PROTO_SAN2,  "sanef2", 2, 0);
+	}
+};

@@ -1,0 +1,41 @@
+const char DUMMY_HOSESON[] 			= "DummyHosesAreOn";
+const char CMD_DIRECTIONALLIGHTS_OFF[]		= "VcmdDirectionalLightsOff";
+const char NAME_REDIRECT[]			= "pRedirect";
+const char NAME_DUMMYREDIRECT[]			= "DummyRedirect";
+
+object Delete: CommandScript
+{
+	Delete()
+	{
+		SetIcon("stop");
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+ 	{
+		return true;
+ 	}
+
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || (Target->GetID() != Caller->GetID())) 
+			return false; 
+		Vehicle v(Caller);
+		if (v.HasCommand(DUMMY_HOSESON) || v.IsInstalled())
+			return false;
+		return true; 
+	}
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (Caller->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (v.HasCommand(CMD_DIRECTIONALLIGHTS_OFF))
+				v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_DIRECTIONALLIGHTS_OFF, Caller);
+			v.Hide();
+			v.PushActionReturnToBase(ACTION_NEWLIST);
+		}	
+	}
+};

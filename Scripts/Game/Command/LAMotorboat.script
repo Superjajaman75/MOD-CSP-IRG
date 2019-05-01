@@ -1,0 +1,123 @@
+//******************************************************************************************
+// #Version 1.0#
+//
+// 		Includes: Dummy command to enable or disable childs on the motorboat
+//
+//	- DummyMotorboat
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char NAME_CHILD01[] 				= "passager";
+const char NAME_CHILD02[] 				= "conducteur";
+const char NAME_CHILD03[] 				= "victime1";
+const char NAME_CHILD04[] 				= "victime2";
+const char NAME_DUMMYOBJECT[] 			= "DummyMotorboat";
+
+object DummyMotorboat : CommandScript
+{
+	DummyMotorboat()
+	{
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (childID == 3) 		//=Entercar command for boat
+			Vehicle v(Target);
+		else					//=All others
+			Vehicle v(Caller);	
+			
+		if (childID == 1)
+		{
+			GameObject mDummy =  Game::CreateObject("mod:Prototypes/Objects/Misc/empty.e4p", NAME_DUMMYOBJECT);
+			mDummy.SetUserData(v.GetID());
+			mDummy.PushActionWait(ACTION_NEWLIST, 7.0f);
+			mDummy.PushActionExecuteCommand(ACTION_APPEND, "DummyMotorboat", Caller, 2, false);
+		}
+		if (childID == 2)
+		{
+			VehicleList list(VT_FIREFIGHTERS_FLB, VT_FIREFIGHTERS_FLB);
+			for(int i = 0; i < list.GetNumVehicles(); i++)
+			{
+				Vehicle *c = list.GetVehicle(i);
+				if (c->GetUserData() == 0)
+				{
+					c->SetUserData(1);
+					c->SetChildEnabled(NAME_CHILD01, false);
+					c->SetChildEnabled(NAME_CHILD02, false);
+					c->SetChildEnabled(NAME_CHILD03, false);
+					c->SetChildEnabled(NAME_CHILD04, false);
+					v.PushActionWait(ACTION_NEWLIST, 0.1f);
+					v.PushActionDeleteOwner(ACTION_APPEND);
+				} else
+					v.PushActionExecuteCommand(ACTION_APPEND, "DummyMotorboat", Caller, 2, false);
+			}
+		}		
+		if (childID == 3) 		//Update all motorboats
+		{
+			VehicleList list(VT_FIREFIGHTERS_FLB, VT_FIREFIGHTERS_FLB);
+			for(int i = 0; i < list.GetNumVehicles(); i++)
+			{
+				Vehicle *c = list.GetVehicle(i);
+				c->SetCommandable(true);
+				if (c->GetNumPassengers() == 0)
+				{
+					if(c->IsChildEnabled(NAME_CHILD01))
+						c->SetChildEnabled(NAME_CHILD01, false);
+					if(c->IsChildEnabled(NAME_CHILD02))
+						c->SetChildEnabled(NAME_CHILD02, false);						
+				}
+				else if (c->GetNumPassengers() == 1)
+				{
+					if(!c->IsChildEnabled(NAME_CHILD01))
+						c->SetChildEnabled(NAME_CHILD01, true);
+					if(c->IsChildEnabled(NAME_CHILD02))
+						c->SetChildEnabled(NAME_CHILD02, false);						
+				}
+				else if (c->GetNumPassengers() == 2)
+				{
+					if(!c->IsChildEnabled(NAME_CHILD01))
+						c->SetChildEnabled(NAME_CHILD01, true);
+					if(!c->IsChildEnabled(NAME_CHILD02))
+						c->SetChildEnabled(NAME_CHILD02, true);						
+				}					
+				if (c->GetNumTransported() == 0)
+				{
+					if(c->IsChildEnabled(NAME_CHILD03))
+							c->SetChildEnabled(NAME_CHILD03, false);
+					if(c->IsChildEnabled(NAME_CHILD04))
+						c->SetChildEnabled(NAME_CHILD04, false);					
+				}
+				else if (c->GetNumTransported() == 1)
+				{
+					if(!c->IsChildEnabled(NAME_CHILD03))
+						c->SetChildEnabled(NAME_CHILD03, true);
+					if(c->IsChildEnabled(NAME_CHILD04))
+						c->SetChildEnabled(NAME_CHILD04, false);						
+				}
+				else if (c->GetNumTransported() == 2)
+				{
+					if(!c->IsChildEnabled(NAME_CHILD03))
+						c->SetChildEnabled(NAME_CHILD03, true);
+					if(!c->IsChildEnabled(NAME_CHILD04))
+						c->SetChildEnabled(NAME_CHILD04, true);						
+				}
+			}	
+			return;
+		}
+
+	}
+};

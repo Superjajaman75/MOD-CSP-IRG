@@ -1,0 +1,77 @@
+//**************************************************************************************************
+// #Version 1.1#										
+//												
+// 		Adds: - Script imports ExamineVehicle from Emergency3.				
+//												
+//**************************************************************************************************
+
+object AskPerson : CommandScript
+{
+	AskPerson()
+	{
+		SetValidTargets(ACTOR_PERSON | ACTOR_VEHICLE);
+		SetDeselectCaller(false);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetPriority(600);
+		SetSelfClickActivation(true);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		Person c(Caller);
+		if (c.IsLinkedWithPerson() || c.IsCarryingPerson())
+			return false;
+
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() == Caller->GetID() )
+			return false;
+
+		if (Caller->GetType()!=ACTOR_PERSON)
+			return false;
+			
+		Person c(Caller);
+		if (c.GetEnteredCarID() != -1 || c.IsLinkedWithPerson() || c.IsCarryingPerson())
+			return false;
+
+		if (Target->GetType() == ACTOR_PERSON)
+		{
+			Person p(Target);
+			if (p.GetRole() == ROLE_GANGSTER || !p.CanBeAsked() || p.IsInjured() || p.IsDead() || p.IsArrested() || p.IsCarried() || p.IsDrowning())
+				return false;
+				
+			return true;
+		}
+
+		if (Target->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle v(Target);
+			if (v.IsParking())
+				return true;
+
+			return false;
+		}
+		
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (Target->GetType() == ACTOR_PERSON)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_FOLLOW);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionAskPerson(ACTION_APPEND, Target);
+		}
+
+		if (Target->GetType() == ACTOR_VEHICLE)
+		{
+			Caller->PushActionMove(ACTION_NEWLIST, Target, TARGET_PASSENGERDOOR);
+			Caller->PushActionTurnTo(ACTION_APPEND, Target);
+			Caller->PushActionExamineVehicle(ACTION_APPEND, Target);
+		}
+	}	
+};

@@ -1,0 +1,55 @@
+int DummyGroup = 24;
+
+object VcmdFlashingLights : CommandScript
+{
+	VcmdFlashingLights()
+	{
+		SetIcon("flashinglight");
+		SetCursor("flashinglight");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+
+		Vehicle v(Caller);
+		if (v.IsBlueLightEnabled())
+			SetIcon("flashinglight");
+		else
+			SetIcon("flashinglight");
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		if (v.IsBlueLightEnabled())
+			v.EnableBlueLights(false);
+		else
+			v.EnableBlueLights(true);
+			
+	}
+};

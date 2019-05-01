@@ -1,0 +1,675 @@
+//******************************************************************************************
+// #Version 1.2#
+//
+// 		Includes: Chase commands for police vehicles
+//
+//	- VcmdFollow
+//	- DummyUpdateFollowPos
+//	- DummyFollow
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_FOLLOW[] 				= "VcmdFollow";
+const char CMD_SIREN[]					= "VcmdSiren";
+const char DUMMY_ARREST2[]				= "DummyArrest2";
+const char DUMMY_HASSIREN[] 			= "DummyHasSiren";
+const char DUMMY_DISABLE[] 				= "DummyDisableSiren";
+const char DUMMY_PATROL[] 				= "DummyPatrol";
+const char NAME_DUMMYOBJECT[] 			= "DummyFollow";
+const char NAME_BLOCK[] 				= "DummyBlock";
+const char DUMMY_UPDATEPOS[] 			= "DummyUpdateFollowPos";
+const char DUMMY_FOLLOW[] 				= "DummyFollow";
+const char EACTION_FINDPATH[] 			= "EActionFindPath";
+const char CMD_PUTINCAR[]				= "PutInCar";
+const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
+const char CMD_SHOOTGUN[] 				= "Shoot";
+const char CMD_HOLSTERGUN[] 			= "HolsterWeapon";
+const char CMD_DRAWGUN[] 				= "DrawWeapon";
+const char CMD_ARREST[] 				= "Arrest";
+const char CMD_ARREST2[] 				= "PcmdArrest2";
+const char SND_DRAW[]					= "mod:Audio/FX/Misc/DrawWeapon.wav";
+const char SND_HOLSTER[]				= "mod:Audio/FX/Misc/HolsterWeapon.wav";
+const char DUMMY_EQUIPMENT[] 			= "DummyEquipmentCommands";
+
+int DummyGroup = 29;
+
+object VcmdFollow : CommandScript
+{
+	VcmdFollow()
+	{
+		SetIcon("follow");
+		SetCursor("follow");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+		SetRestrictions(RESTRICT_NOTDESTROYED | RESTRICT_NOTINJURED);
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_PERSON);
+		SetPriority(10);
+	}
+
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+		if (!Caller->IsValid() || !Caller->HasCommand(CMD_SIREN))
+			return false;
+
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			
+			int PlayerID = v.GetPlayerMP();					//Impossibilité au client de faire la poursuite
+			if (Game::IsMultiplayer() && PlayerID != 0)
+				return false;
+
+			if(v.GetVehicleType() != VT_POLICE_STW && v.GetVehicleType() != VT_POLICE_MTW && v.GetVehicleType() != VT_POLICE_SW)
+				return false;
+			if(v.GetNumPassengers() == 0)
+				return false;
+		}
+
+		return true;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Target->GetID() == Caller->GetID()))
+			return false;
+
+		if (Caller->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Caller);
+			if (Game::IsMultiplayer())
+			{
+				int PlayerID = v.GetPlayerMP();
+				v.SetPlayerMP(PlayerID);
+			}
+			if(v.GetNumPassengers() == 0)
+				return false;
+		}
+		
+		if (Target->GetType() == ACTOR_VEHICLE)
+		{
+			Vehicle t(Target);
+			if (!t.IsValid() || t.IsParking() || t.IsUplifted() || t.IsDestroyed() || t.IsSmoking() || (t.GetVehicleType() != VT_NOSQUAD && t.GetVehicleType() != VT_GANGSTER_GETAWAY))
+				return false;	
+		}
+		else if (Target->GetType() == ACTOR_PERSON)
+		{
+			Person p(Target);
+			if(!p.IsValid() || p.IsLinkedWithPerson() || p.IsCarryingPerson() || p.GetEnteredCarID() != -1 || p.IsPhysicsSimulationEnabled() || p.GetRole() == ROLE_ANIMAL || p.GetRole() == ROLE_SQUAD)
+				return false;
+								
+			if(p.GetRole() == ROLE_GANGSTER)
+				SetPriority(800);		
+		}
+		
+		return true;
+ 	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		if (Game::IsMultiplayer())
+		{
+			int PlayerID = v.GetPlayerMP();
+			v.SetPlayerMP(PlayerID);
+		}
+		GameObject t(Target);
+		if (childID == 0)
+		{
+			if (v.HasCommand(DUMMY_FOLLOW))
+			{
+				v.RemoveCommand(DUMMY_FOLLOW);
+				int VecID = v.GetID();
+				GameObjectList list = Game::GetGameObjects(NAME_DUMMYOBJECT);
+				for(int i=0; i<list.GetNumObjects(); i++)
+				{
+					GameObject *obj = list.GetObject(i);
+					if (obj->GetUserData() == VecID)
+					{
+						obj->PushActionDeleteOwner(ACTION_NEWLIST);
+					}
+				}
+			}
+			if (v.HasObjectPath(NULL))
+				Game::ExecuteCommand(DUMMY_PATROL, &v, &v);
+			v.PushActionExecuteCommand(ACTION_NEWLIST, CMD_FOLLOW, &t, 1, false);
+			if (!v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF) && !Input::LShiftPressed() && !Input::RShiftPressed())
+				Game::ExecuteCommand(CMD_SIREN, &v, &v);
+			GameObject mDummy = Game::CreateObject("mod:Prototypes/Objects/Misc/empty.e4p", NAME_DUMMYOBJECT);
+			mDummy.Hide();
+			mDummy.SetUserData(v.GetID());
+			if (Game::IsMultiplayer())
+			{
+				int PlayerID = v.GetPlayerMP();
+				mDummy.SetPlayerMP(PlayerID);
+			}
+			Vector vPos = v.GetPosition();
+			mDummy.SetPosition(vPos);
+			mDummy.PushActionExecuteCommand(ACTION_NEWLIST, DUMMY_UPDATEPOS, &t, 0, false);
+		}
+		if (childID == 1)
+		{
+			if (!v.HasCommand(DUMMY_FOLLOW))
+				v.AssignCommand(DUMMY_FOLLOW);
+			v.PushActionMove(ACTION_NEWLIST, t.GetPosition(), true);
+			v.PushActionExecuteCommand(ACTION_APPEND, CMD_FOLLOW, &t, 1, false);
+		}
+	}
+};
+
+object DummyUpdateFollowPos : CommandScript
+{
+	DummyUpdateFollowPos()
+	{
+		SetGroupID(DummyGroup);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+	}
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		GameObject t(Target);
+		GameObject mDummy(Caller);
+		if (Game::IsMultiplayer())
+			{
+				int PlayerID = mDummy.GetPlayerMP();
+				mDummy.SetPlayerMP(PlayerID);
+			}
+		int VecID = mDummy.GetUserData();
+		VehicleList l1(VT_THW_FGRR_BKF, VT_AMBULANCE_TRANSEVAC);
+		for(int i = 0; i < l1.GetNumVehicles(); i++)
+		{
+			Vehicle v = l1.GetVehicle(i);
+			if (v.GetID() == VecID)
+			{
+				if (!v.HasCommand(DUMMY_FOLLOW))
+				{
+					mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+					return;
+				}
+				else if (!v.IsValid() || v.IsDestroyed() || v.IsSmoking())
+				{
+					mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+					v.PushActionWait(ACTION_NEWLIST, 0.1f);
+					return;
+				} 
+				else if (!t.IsValid())
+				{
+					mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+					v.PushActionWait(ACTION_NEWLIST, 0.1f);
+					return;
+				} else
+				{
+					Vector vPos = v.GetPosition();
+					mDummy.SetPosition(vPos);
+					mDummy.PushActionWait(ACTION_NEWLIST, 0.5f);
+					mDummy.PushActionExecuteCommand(ACTION_APPEND, DUMMY_UPDATEPOS, &t, 0, false);
+				}
+				if (v.GetBoundingRadiusDistXYToObject(&t) < 900.f && t.GetType() == ACTOR_VEHICLE)
+				{
+					mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+					Vehicle vt(&t);
+					if (vt.GetVehicleType() != VT_GANGSTER_GETAWAY)
+					{
+						GameObject mBlock = Game::CreateObject("mod:Prototypes/Objects/Street/citypole.e4p", NAME_BLOCK);
+						mBlock.SetUserData(t.GetID());
+						if (Game::IsMultiplayer())
+						{
+							int PlayerID = v.GetPlayerMP();
+							mBlock.SetPlayerMP(PlayerID);
+						}
+						Vector bPos = t.GetPosition();
+						mBlock.SetPosition(bPos);
+						mBlock.PushActionWait(ACTION_NEWLIST, 30.f);
+						mBlock.PushActionExecuteCommand(ACTION_APPEND, DUMMY_UPDATEPOS, &t, 1, false);
+						if (!mBlock.IsFlagSet(OF_HIDDEN))
+							mBlock.SetFlag(OF_HIDDEN);
+					} 
+					else if (vt.GetVehicleType() == VT_GANGSTER_GETAWAY)
+					{
+						if (vt.HasObjectPath(NULL)) //Stop gangster vehicle
+							vt.RemoveObjectPath();
+					}
+					v.ClearActions();
+					Vector Move = t.GetPosition();
+						float r[9];
+						float childr[9];
+					t.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+					float dx = -350.f, dy = 0.f, dz = 0.f;
+					Math::RotateVector(dx, dy, dz, r);
+					Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+					Math::MultiplyMatrices(childr, r);
+					Move = Move + Vector(dx, dy, 0);
+					Game::FindFreePosition(&v, Move, 250);
+					v.PushActionMove(ACTION_NEWLIST, Move, true);
+					v.PushActionWait(ACTION_APPEND, 0.5f);
+					v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, &t, 0, false);					
+				}
+				else if (v.GetBoundingRadiusDistXYToObject(&t) < 600.f && t.GetType() == ACTOR_PERSON)
+				{
+					mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+					Person pt(Target);
+					if (pt.GetRole() != ROLE_GANGSTER && (pt.HasObjectPath(NULL) || pt.IsFleeing()))
+						t.PushActionWait(ACTION_NEWLIST, 10.f);						
+					v.ClearActions();
+					v.PushActionWait(ACTION_NEWLIST, 0.5f);
+					v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, &t, 0, false);
+				}
+				return;				
+			}
+		}
+		mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+	}
+};
+
+object DummyFollow : CommandScript
+{
+	DummyFollow()
+	{
+		SetGroupID(DummyGroup);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		return false;
+	}
+
+  	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vehicle v(Caller);
+		Person p(Caller);
+		GameObject t(Target);
+		if (childID == 0)
+		{
+			if (v.HasCommand(DUMMY_HASSIREN) && v.HasCommand(CMD_AUTOSIREN_OFF))
+					Game::ExecuteCommand(DUMMY_DISABLE, &v, &v);
+			PersonList l1 = v.GetPassengers();
+			Vector Pos = v.GetPosition();
+			Vector Pos2 = v.GetPosition();
+			float r[9];
+			float childr[9];
+			v.GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+		
+			bool cop1 = false;
+			bool cop2 = false;
+			bool armed = false;
+			bool shoot = false;
+			bool fight = false;
+			
+			if (l1.GetNumPersons() >= 1)
+			{
+				if (l1.GetPerson(0)->HasCommand(CMD_ARREST) || l1.GetPerson(0)->HasCommand(CMD_ARREST2))
+					cop1 = true;
+			}
+			if (t.GetType() == ACTOR_VEHICLE)
+			{
+				Vehicle vt(Target);
+				PersonList l2 = vt.GetPassengers();
+				if (l2.GetNumPersons() > 0 || vt.GetVehicleType() == VT_GANGSTER_GETAWAY)
+				{
+					armed = true;
+					if (l1.GetNumPersons() > 1)
+					{
+						if (l1.GetPerson(1)->HasCommand(CMD_ARREST) || l1.GetPerson(1)->HasCommand(CMD_ARREST2))
+							cop2 = true;
+					}
+				}
+			} 
+			else if (t.GetType() == ACTOR_PERSON)
+			{
+				Person pt(Target);
+				if (pt.GetRole() == ROLE_GANGSTER)
+				{
+					armed = true;
+					if (l1.GetNumPersons() > 1)
+					{
+						if (l1.GetPerson(1)->HasCommand(CMD_ARREST) || l1.GetPerson(1)->HasCommand(CMD_ARREST2))
+							cop2 = true;
+					}					
+					if (pt.GetEquipment() == EQUIP_PISTOL)
+					{
+						if ((pt.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKALL || pt.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD || pt.GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD_SMART || pt.GetBehaviour() == BEHAVIOUR_GANGSTER_GUARDHOSTAGE) && rand()%10 > 5)
+							shoot = true;						
+						else if (rand()%4 >= 1)
+							fight = true;					
+					}
+				}
+			}			
+			if (cop1 && cop2)
+			{
+				v.SetCommandable(false);
+				v.PlayAnimOpenDoor(DAT_PERSON, 0.8f, &v);
+				v.PlayAnimOpenDoor(DAT_SPECIAL, 0.8f, &v);
+				v.PushActionWait(ACTION_NEWLIST, 1.f);
+				v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, &t, 4, false);
+			}
+			else if (cop1)
+			{
+				v.SetCommandable(false);
+				v.PlayAnimOpenDoor(DAT_PERSON, 0.8f, Caller);
+				v.PushActionWait(ACTION_NEWLIST, 1.f);
+				v.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, &t, 3, false);
+			}
+			Person p1;
+			Person p2;
+			if (cop1)
+			{
+				p1 = l1.GetPerson(0);
+				float dx = -12.f, dy = -65.f, dz = 0.f;
+				v.RemovePassenger(&p1);
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				Pos = Pos + Vector(dx, dy, 0);
+				if (p1.GetEquipment() != EQUIP_PISTOL && p1.IsEquipped())
+				{
+					p1.RemoveEquipment();
+					p1.PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, &p1, 10, false);
+					p1.PushActionWait(ACTION_APPEND, 0.7f);
+				} else
+					p1.PushActionWait(ACTION_NEWLIST, 0.8f);
+				p1.SetPosition(Pos);
+				p1.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				p1.UpdatePlacement();
+ 				p1.Hide();
+				if (Game::IsMultiplayer())
+				{
+					int PlayerID = v.GetPlayerMP();
+					p1.SetPlayerMP(PlayerID);
+				}
+				p1.PushActionShowHide(ACTION_APPEND, false);
+				p1.PushActionSwitchAnim(ACTION_APPEND, "idle");
+				p1.PushActionTurnTo(ACTION_APPEND, &t);
+			}
+			if (cop2)
+			{
+				p2 = l1.GetPerson(1);
+				float dx2 = -12.f, dy2 = 65.f, dz2 = 0.f;	
+				v.RemovePassenger(&p2);
+				Math::RotateVector(dx2, dy2, dz2, r);
+				Math::EulerToMatrix(0.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				Vector Pos2 = Pos2 + Vector(dx2, dy2, 0);
+				if (p2.GetEquipment() != EQUIP_PISTOL && p2.IsEquipped())
+				{
+					p2.RemoveEquipment();
+					p2.PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, &p2, 10, false);
+					p2.PushActionWait(ACTION_APPEND, 0.7f);
+				} else
+					p2.PushActionWait(ACTION_NEWLIST, 0.8f);
+				p2.SetPosition(Pos2);
+				p2.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				p2.UpdatePlacement();
+ 				p2.Hide();
+				if (Game::IsMultiplayer())
+				{
+					int PlayerID = v.GetPlayerMP();
+					p2.SetPlayerMP(PlayerID);
+				}
+				p2.PushActionShowHide(ACTION_APPEND, false);
+				p2.PushActionSwitchAnim(ACTION_APPEND, "idle");
+				p2.PushActionTurnTo(ACTION_APPEND, &t);
+			}
+			if (cop1)
+			{
+				if (t.GetType() == ACTOR_VEHICLE)
+				{
+					Vehicle vt(&t);
+					if (armed)
+					{
+						if (!vt.IsFlagSet(OF_TRANSPORTABLE))
+							vt.SetFlag(OF_TRANSPORTABLE);
+						if (!vt.IsFlagSet(OF_RECOVERABLE))
+							vt.SetFlag(OF_RECOVERABLE);
+						if (!vt.IsParking())
+							vt.SetParking(true);
+						vt.RemoveObjectPath();
+						vt.PushActionWait(ACTION_NEWLIST, 0.1f);
+						if (p1.GetEquipment() != EQUIP_PISTOL && p1.HasCommand(CMD_DRAWGUN))
+						{
+							p1.PushActionEquipWeapon(ACTION_APPEND, true);
+							p1.AssignCommand(CMD_SHOOTGUN);
+							p1.AssignCommand(CMD_HOLSTERGUN);
+							p1.RemoveCommand(CMD_DRAWGUN);
+							p1.AssignCommand(CMD_ARREST2);
+							p1.RemoveCommand(CMD_ARREST);
+							Vector Pos = p1.GetPosition();
+							Audio::PlaySample3D(SND_DRAW, Pos);
+						}
+						p1.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+						PersonList l3;
+						if (vt.GetNumPassengers() > 0)
+							l3 = vt.GetPassengers();
+						else if (vt.GetNumTransported() > 0)
+							l3 = vt.GetTransports();
+						if (l3.GetNumPersons() > 0)
+						{
+							for(int i=0; i < l3.GetNumPersons(); i++)
+							{
+								l3.GetPerson(i)->PushActionWait(ACTION_NEWLIST, 2.f);
+								l3.GetPerson(i)->PushActionLeaveCar(ACTION_APPEND, &vt);
+								if (l3.GetPerson(i)->GetEquipment() == EQUIP_PISTOL && (l3.GetPerson(i)->GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKALL || l3.GetPerson(i)->GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD || l3.GetPerson(i)->GetBehaviour() == BEHAVIOUR_GANGSTER_ATTACKSQUAD_SMART || l3.GetPerson(i)->GetBehaviour() == BEHAVIOUR_GANGSTER_GUARDHOSTAGE) && rand()%10 > 5)
+								{
+									shoot = true;
+									l3.GetPerson(i)->SetPrimaryTarget(&p1);
+								} else
+								{
+									l3.GetPerson(i)->PushActionWait(ACTION_APPEND, 1.f);
+									l3.GetPerson(i)->PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+								}
+								Person pt = l3.GetPerson(0);
+								if (shoot)
+								{
+									p1.PushActionWait(ACTION_APPEND, 2.0f);
+									p1.PushActionShoot(ACTION_APPEND, &pt);							
+								}
+								else
+								{
+									p1.PushActionWait(ACTION_APPEND, 6.0f);
+									p1.PushActionMove(ACTION_APPEND, &pt, TARGET_FOLLOW);
+									p1.PushActionTurnTo(ACTION_APPEND, &pt);								
+									p1.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, &p1, 3, false);
+									if (rand()%4 >= 1)
+										fight = true;	
+									p1.PushActionArrest(ACTION_APPEND, &pt, fight);
+									if (v.GetFreeTransports() >= 1 && pt.GetRole() == ROLE_GANGSTER)
+										p1.PushActionExecuteCommand(ACTION_APPEND, CMD_PUTINCAR, &v, 0, false);
+								}
+								if (cop2)
+								{
+									if (p2.GetEquipment() != EQUIP_PISTOL && p2.HasCommand(CMD_DRAWGUN))
+									{
+										p2.PushActionEquipWeapon(ACTION_APPEND, true);
+										p2.AssignCommand(CMD_SHOOTGUN);
+										p2.AssignCommand(CMD_HOLSTERGUN);
+										p2.RemoveCommand(CMD_DRAWGUN);
+										p2.AssignCommand(CMD_ARREST2);
+										p2.RemoveCommand(CMD_ARREST);
+										Vector Pos = p2.GetPosition();
+										Audio::PlaySample3D(SND_DRAW, Pos);
+									}
+									if (shoot)
+									{
+										p2.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+										p2.PushActionWait(ACTION_APPEND, 2.0f);
+										p2.PushActionShoot(ACTION_APPEND, &pt);	
+									} else
+									{
+										p2.PushActionTurnTo(ACTION_APPEND, &t);
+										p2.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+										p2.PushActionWait(ACTION_APPEND, 6.5f);
+										p2.PushActionSwitchAnim(ACTION_APPEND, "idlegun");
+									}
+									return;
+								}
+							}
+						}
+					}
+					else
+					{
+						p1.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, Target, 2, false);
+					}				
+				}
+				else if (t.GetType() == ACTOR_PERSON)
+				{
+					Person pt(&t);
+					if (armed)
+					{
+						if (p1.GetEquipment() != EQUIP_PISTOL && p1.HasCommand(CMD_DRAWGUN))
+						{
+							p1.PushActionEquipWeapon(ACTION_APPEND, true);
+							p1.AssignCommand(CMD_SHOOTGUN);
+							p1.AssignCommand(CMD_HOLSTERGUN);
+							p1.RemoveCommand(CMD_DRAWGUN);
+							p1.AssignCommand(CMD_ARREST2);
+							p1.RemoveCommand(CMD_ARREST);
+							Vector Pos = p1.GetPosition();
+							Audio::PlaySample3D(SND_DRAW, Pos);
+						}
+						if (shoot)
+							p1.PushActionShoot(ACTION_APPEND, &pt);
+						else
+						{
+							if (pt.IsValid() && !pt.IsCurrentAnimation("hostage_down") && !pt.IsArrested() && !pt.IsDrowning() && !pt.IsCarried() && pt.GetState() == PERSONSTATE_NORMAL)
+							{
+								pt.ClearActions();
+								if (pt.HasObjectPath(NULL))
+									pt.RemoveObjectPath();
+								pt.SetBehaviour(BEHAVIOUR_GANGSTER_CIVILARMED);
+								pt.SetDisableGangsterSymbol(false);
+								pt.PushActionWait(ACTION_APPEND, 2.0f);
+								pt.PushActionSwitchAnim(ACTION_APPEND, "hostage_down");
+								pt.PushActionWait(ACTION_APPEND, 20.0f);
+								pt.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Target, 1, false);
+								p1.PushActionTurnTo(ACTION_APPEND, &pt);
+								p1.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+								p1.PushActionWait(ACTION_APPEND, 2.5f);
+								p1.PushActionMove(ACTION_APPEND, &pt, TARGET_TOUCHPERSON);
+								p1.PushActionExecuteCommand(ACTION_APPEND, DUMMY_ARREST2, Caller, 3, false);
+								p1.PushActionArrest(ACTION_APPEND, &pt, fight);
+								p1.PushActionWait(ACTION_APPEND, 1.f);
+								p1.PushActionExecuteCommand(ACTION_APPEND, "Arrest", &pt, 5, false);
+								//if (v.GetFreeTransports() >= 1 && pt.GetRole() == ROLE_GANGSTER)
+								//	p1.PushActionExecuteCommand(ACTION_APPEND, CMD_PUTINCAR, &v, 0, false);
+							}
+						}
+					}
+					else
+					{
+						if (p1.GetEquipment() == EQUIP_PISTOL)
+						{
+							p1.PushActionEquipWeapon(ACTION_APPEND, false);
+							p1.RemoveCommand(CMD_SHOOTGUN);
+							p1.RemoveCommand(CMD_HOLSTERGUN);
+							p1.AssignCommand(CMD_DRAWGUN);
+							p1.RemoveCommand(CMD_ARREST2);
+							p1.AssignCommand(CMD_ARREST);
+							Vector Pos = p1.GetPosition();
+							Audio::PlaySample3D(SND_HOLSTER, Pos);
+						}
+						p1.PushActionExecuteCommand(ACTION_APPEND, CMD_ARREST, &pt, 0, false);	
+					}
+				}
+			} 
+			if (t.GetType() == ACTOR_PERSON && cop2 && armed)
+			{
+				Person pt(&t);
+				if (p2.GetEquipment() != EQUIP_PISTOL && p2.HasCommand(CMD_DRAWGUN))
+				{
+					p2.PushActionEquipWeapon(ACTION_APPEND, true);
+					p2.AssignCommand(CMD_SHOOTGUN);
+					p2.AssignCommand(CMD_HOLSTERGUN);
+					p2.RemoveCommand(CMD_DRAWGUN);
+					p2.AssignCommand(CMD_ARREST2);
+					p2.RemoveCommand(CMD_ARREST);	
+					Vector Pos = p2.GetPosition();
+					Audio::PlaySample3D(SND_DRAW, Pos);
+				}
+				if (shoot)
+					p2.PushActionShoot(ACTION_APPEND, &pt);
+				else
+				{
+					p2.PushActionTurnTo(ACTION_APPEND, &pt);
+					p2.PushActionSwitchAnim(ACTION_APPEND, "pistoltarget");
+					p2.PushActionWait(ACTION_APPEND, 5.0f);
+					p2.PushActionSwitchAnim(ACTION_APPEND, "idlegun");
+				}
+			}
+		}
+		if (childID == 1)
+		{
+			int VecID = Caller->GetID();
+			GameObjectList list = Game::GetGameObjects(NAME_BLOCK);
+			for(int i=0; i<list.GetNumObjects(); i++)
+			{
+				GameObject *obj = list.GetObject(i);
+				if (obj->GetUserData() == VecID)
+				{
+					obj->PushActionDeleteOwner(ACTION_NEWLIST);
+				}
+			}	
+		}
+		if (childID == 2)
+		{
+			p.PushActionMove(ACTION_APPEND, &t, TARGET_PASSENGERDOOR);
+			p.PushActionTurnTo(ACTION_APPEND, &t);
+			p.PushActionWait(ACTION_APPEND, 0.3f);
+			p.PushActionSwitchAnim(ACTION_APPEND, "talkto");
+			p.PushActionWait(ACTION_APPEND, 3.0f);
+			p.PushActionSwitchAnim(ACTION_APPEND, "idle");
+			p.PushActionExecuteCommand(ACTION_APPEND, DUMMY_FOLLOW, &t, 5, false);
+		}
+		if (childID == 3)
+		{
+			v.PlayAnimCloseDoor(DAT_PERSON, 0.8f, &v);
+			v.SetCommandable(true);
+		}
+		if (childID == 4)
+		{
+			v.PlayAnimCloseDoor(DAT_SPECIAL, 0.8f, &v);
+			v.PlayAnimCloseDoor(DAT_PERSON, 0.8f, &v);
+			v.SetCommandable(true);
+		}
+		if (childID == 5)
+		{
+			int VecID = Target->GetID();
+			GameObjectList list = Game::GetGameObjects(NAME_BLOCK);
+			for(int i=0; i<list.GetNumObjects(); i++)
+			{
+				GameObject *obj = list.GetObject(i);
+				if (obj->GetUserData() == VecID)
+					obj->PushActionDeleteOwner(ACTION_NEWLIST);
+			}
+			int Money = Mission::GetMoneyLeft();
+			int Fine;
+			int Chance = Math::rand() % 4;
+			if (Chance == 0)
+			{
+				Fine = 300;
+				Mission::PlayHint("Conduite en etat d'ivresse, vous gagnez 300 credits");
+			}
+			else if (Chance == 1)
+			{
+				Fine = 200;
+				Mission::PlayHint("Defaut de permis, vous gagnez 200 credits");
+			}
+			else if (Chance == 2)
+			{
+				Fine = 0;
+				Mission::PlayHint("Aucun probleme pour une fois!");
+			}
+			else if (Chance == 3)
+			{
+				Fine = 0;
+				Mission::PlayHint("Le chauffeur est sous l'emprise de moules-frites");
+			}
+			int NewMoney = Money + Fine;          
+			Mission::SetMoney(NewMoney);			
+		}
+	}
+};

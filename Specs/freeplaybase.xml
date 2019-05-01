@@ -1,0 +1,98 @@
+<freeplaybase>
+
+	<!--MOD CSP-->
+	
+		<!--01 Ambulance-->
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/vlmdouai.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/S-Max_2010_NEF.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/ARValenciennes.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/ARSmur28.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/umh1.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/PF_FOURGON1.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/PF_FOURGON2.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/va.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Ambulance/Dragon62.e4p" count="1" />
+
+		
+		<!--06 POLICE-->
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/estatepn.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/berlingo.e4p" count="5" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/peugeot308.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/VP_Scenic.e4p" count="5" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/traficpnhd.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/traficpn1.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/transit-pn.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Master_PNfourgon.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/master_policebalisage.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Master_CRS.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/TRANSIT_crs.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/CANONCRS.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/deminage2.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/golf_bac.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/TepeePolm.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/cliopolm.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/c4_bana.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/estategendarmerie.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Kangoo1.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/c4_gn.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/trafic.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/fp4v2.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Ivecogendarmerie.e4p" count="10" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Subaru.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/MeganeRS.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/ford_focusrs.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/Audi_A6.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/buscrs.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/03 LA Police/as350_lapd.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/getawaycar.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/BMW1200RT.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/BMW1200RTPN.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/c8_raid.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/bri.e4p" count="1" />
+	
+	
+	
+		<!--09 Fire Department-->
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vsav1master.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vsavDouai.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p" count="3" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p" count="3" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p" count="1" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VLI1.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VSS_HD.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/FPTL68.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/fptscanianouveau.e4p" count="4" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/FPT6.e4p" count="4" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/FPT3.e4p" count="4" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/nouveauccr.e4p" count="4" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/CCF1.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/CCFS1.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/ccgc.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/FSR2.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/EPA_Scania.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/EMOD4.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/EMOD32.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vl9.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VLC.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vpc-redeployer.e4p" count="4" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/FCnoinstal.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vpl_HD.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/PMA.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VIRT2.e4p" count="1" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/vraad.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/CDHR.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/2.e4p" count="5" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p" count="5" />	
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/bateau.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VTU.e4p" count="1" />
+	
+		<!--10 TEC-->
+	<vehicle prototype="mod:Prototypes/Vehicles/TEC/erdf.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Sonstiges/Kran.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/TEC/depaneuse1.e4p" count="10" />
+	<vehicle prototype="mod:Prototypes/Vehicles/TEC/VP8.e4p" count="2" />
+	<vehicle prototype="mod:Prototypes/Vehicles/TEC/Sanef01.e4p" count="2" />
+	<!--MOD CSP-->
+	
+</freeplaybase>

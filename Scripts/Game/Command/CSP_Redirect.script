@@ -1,0 +1,43 @@
+//******************************************************************************************
+// #Version 1.1#
+//
+// 		Changes: - Compatible with 'Lift person' command.
+//		A supprimer ?
+//
+//******************************************************************************************
+
+object Redirect : CommandScript
+{
+	Redirect()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if(p.IsValid() && (!p.IsEquipped() || p.GetEquipment() == EQUIP_REDIRECTSIGN) && !p.IsLinkedWithPerson() && !p.IsCarryingPerson() && p.GetEnteredCarID() == -1)
+			return true;
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		if(p.IsValid() && (!p.IsEquipped() || p.GetEquipment() == EQUIP_REDIRECTSIGN) && !p.IsLinkedWithPerson() && !p.IsCarryingPerson() && p.GetEnteredCarID() == -1)
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionRedirect(ACTION_NEWLIST);
+	}
+};

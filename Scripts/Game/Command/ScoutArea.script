@@ -1,0 +1,36 @@
+object ScoutArea : CommandScript
+{
+	ScoutArea()
+	{
+		SetCursor("ScoutMine");
+		SetIcon("ScoutMine");
+		SetValidTargets(ACTOR_PERSON);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetPriority(620);
+	}
+	
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return true;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Caller->GetType()!=ACTOR_PERSON || Caller->GetID() != Target->GetID())
+			return false;
+
+		Person person(Caller);
+		if(person.GetFirehoseID() > 0 || person.GetEnteredCarID() != -1)
+			return false;
+
+		return true;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{		
+		Caller->PushActionScoutArea(ACTION_NEWLIST);
+	}
+};

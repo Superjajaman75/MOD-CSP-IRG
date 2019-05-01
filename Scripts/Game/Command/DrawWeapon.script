@@ -1,0 +1,75 @@
+//******************************************************************************************
+// #Version 1.4#
+//
+// 		Changes: - Shoot and Holsterweapon commands will be added.
+//			   - DrawWeapon will be removed.
+//			   - Command cannot be executed when caller is carrying person.
+//			   - Sound will be played.
+//			   - Compatible with Armed Arrest mod.
+//
+//******************************************************************************************
+
+const char CMD_SHOOTGUN[] 		= "Shoot";
+const char CMD_HOLSTERGUN[] 		= "HolsterWeapon";
+const char CMD_DRAWGUN[] 		= "DrawWeapon";
+const char CMD_ARREST[] 		= "Arrest";
+const char CMD_ARREST2[] 		= "PcmdArrest2";
+const char SND_DRAW[]			= "mod:Audio/FX/Misc/DrawWeapon.wav";
+
+object DrawWeapon : CommandScript
+{
+
+	DrawWeapon()
+	{
+		SetValidTargets(ACTOR_PERSON);
+		SetDoubleClickable(true);
+		SetGroupID(CGROUP_DRAW_WEAPON);
+		SetGroupLeader(true);
+		SetPossibleEquipment(EQUIP_NONE);
+		SetRestrictions(RESTRICT_SELFEXECUTE);
+		SetDeselectCaller(false);
+		SetPriority(700);
+	}
+
+	bool CheckGroupVisibility(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		return !Caller->IsEquipped();
+	}
+
+	bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if(p.IsValid() && !p.IsLinkedWithPerson() && !p.IsCarryingPerson() && p.GetEnteredCarID() == -1)
+			return true;
+		return false;
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if(!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+			return false;
+
+		Person p(Caller);
+		if(p.IsValid() && !p.IsEquipped() && !p.IsLinkedWithPerson() && !p.IsCarryingPerson())
+			return true;
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Caller->PushActionEquipWeapon(ACTION_NEWLIST, true);
+		Caller->AssignCommand(CMD_SHOOTGUN);
+		Caller->AssignCommand(CMD_HOLSTERGUN);
+		Caller->RemoveCommand(CMD_DRAWGUN);
+		Caller->AssignCommand(CMD_ARREST2);
+		Caller->RemoveCommand(CMD_ARREST);
+
+		Vector Pos = Caller->GetPosition();
+		Audio::PlaySample3D(SND_DRAW, Pos);
+	}
+};

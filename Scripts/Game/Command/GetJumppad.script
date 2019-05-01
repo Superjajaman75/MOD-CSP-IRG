@@ -1,0 +1,69 @@
+//******************************************************************************************
+// #Version 1.2#
+//
+// 		Changes: - UseJumppad will assigned.
+//			   - Person with HolsterWeapon can't use this command.
+//
+//******************************************************************************************
+
+const char DUMMY_EQUIPMENT[] 		= "DummyEquipmentCommands";
+
+object GetJumppad : CommandScript
+{
+	GetJumppad()
+	{
+		SetValidTargets(ACTOR_VEHICLE | ACTOR_OBJECT);
+		SetGroupID(CGROUP_GETEQUIPMENT);
+		SetRestrictions(RESTRICT_NOTDESTROYED | RESTRICT_NOTBURNING | RESTRICT_HASJUMPPAD);
+		SetPossibleCallers(ACTOR_PERSON);
+		SetNeedsCarWithFlagSet(OF_HAS_JUMPPAD);
+	}
+
+	/*bool CheckPossible(GameObject *Caller)
+	{
+		if(!Caller->IsValid() || Caller->GetType() != ACTOR_PERSON)
+			return false;
+		Person p(Caller);
+		if (p.GetEquipment()==EQUIP_JUMPPAD || p.IsCarryingPerson()||p.IsLinkedWithPerson()|| p.GetFirehoseID()!=0 || p.IsPulling())
+			return false;
+		if (!Game::ExistsNormalObjectWithFlagSet(OF_HAS_JUMPPAD))
+			return false;
+		return true;
+	}*/
+	
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+	{
+		if (!Caller->IsValid() || !Target->IsValid() || (Caller->GetID()==Target->GetID()))
+			return false;
+
+		if (Target->GetType()==ACTOR_VEHICLE)
+		{
+			Vehicle v(Target);
+			if ((v.HasCommand("FlyTo") || v.HasCommand("VcmdDeInstallRope")) && !v.IsOnGround())
+				return false;
+		}
+
+		GameObject obj(Target);
+		if (Caller->GetObjectType()==TYPE_PERSON && Caller->GetEquipment()!=EQUIP_JUMPPAD &&
+			obj.IsValid() && obj.IsFlagSet(OF_HAS_JUMPPAD))
+		{
+			Person p(Caller);
+			if(p.IsValid() && (p.IsCarryingPerson()|| p.HasCommand("HolsterWeapon") || p.IsLinkedWithPerson()|| p.GetFirehoseID()!=0 || p.IsPulling() || p.GetEnteredCarID() != -1))
+				return false;
+			
+			return true;
+		}
+
+		return false;
+	}
+
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+	{
+		Vector TargetPos = Target->GetTargetPoint(Caller, TARGET_EQUIPMENTDOOR);
+		
+		Caller->PushActionMove(ACTION_NEWLIST, TargetPos);
+		Caller->PushActionTurnTo(ACTION_APPEND, Target);
+		Caller->PushActionGetEquipment(ACTION_APPEND, Target, EQUIP_JUMPPAD);
+		Caller->PushActionExecuteCommand(ACTION_APPEND, DUMMY_EQUIPMENT, Target, 4, false);
+	}
+};

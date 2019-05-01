@@ -1,0 +1,249 @@
+//******************************************************************************************
+// #Version 1.5#
+//
+// 		Includes: All Directional Lights commands
+//
+//	- VcmdDirectionalLightsOn
+//	- VcmdDirectionalLightsOff
+//	- DummyDirectionalLights
+//
+//		Script by Hoppah
+//		
+//		Usage of this script in other mods is NOT allowed without permission of Hoppah
+//
+//******************************************************************************************
+
+const char CMD_DIRECTIONALLIGHTS_ON[]		= "VcmdDirectionalLightsOn";
+const char CMD_DIRECTIONALLIGHTS_OFF[]		= "VcmdDirectionalLightsOff";
+const char NAME_REDIRECT[]			= "pRedirect";
+const char NAME_DUMMYREDIRECT[]			= "DummyRedirect";
+const char OBJ_REDIRECT[]			= "mod:Prototypes/Objects/01 LA Equipment/invisible.e4p";
+const char HINT_DIRECTIONAL[] 			= "Can't execute command!";
+const char DUMMY_PATROL[] 			= "DummyPatrol";
+const char DUMMY_DIRECTIONALLIGHTS[]		= "DummyDirectionalLights";
+const char EACTION_FINDPATH[] 			= "EActionFindPath";
+const char PATH_PATROL01[] 			= "patrolpath01";
+const char PATH_PATROL02[] 			= "patrolpath02";
+const char PATH_PATROL03[] 			= "patrolpath03";
+
+int DummyGroup = 26;
+
+object VcmdDirectionalLightsOn : CommandScript
+{
+ 	VcmdDirectionalLightsOn()
+ 	{
+ 		SetIcon("directionalon");
+ 		SetCursor("directionalon");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+		v.PushActionWait(ACTION_NEWLIST, 0.1f);
+		if (v.HasCommand("DummyFollow"))
+			v.RemoveCommand("DummyFollow");
+
+		Vector PerPos = Caller->GetPosition();
+			float r[9];
+			float childr[9];
+		Caller->GetRotation(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+
+		//if (Game::FindFreePosition(Caller, PerPos, 140.f))
+		//{
+			GameObject mDummy;
+            		mDummy = Game::CreateObject(OBJ_REDIRECT, NAME_REDIRECT);
+			if (mDummy.IsValid())
+			{
+				float dx = -135.f, dy = 0.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(180.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				PerPos = PerPos + Vector(dx, dy, 0);
+				mDummy.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				mDummy.SetPosition(PerPos);
+				mDummy.UpdatePlacement();
+				mDummy.PushActionRedirect(ACTION_NEWLIST);
+				mDummy.SetSelectable(false);
+			}
+
+			GameObject mDummyRedirect;
+            		mDummyRedirect= Game::CreateObject(OBJ_REDIRECT, NAME_DUMMYREDIRECT);
+			if (mDummyRedirect.IsValid())
+			{
+				float dx = -100.f, dy = 0.f, dz = 0.f;
+				Math::RotateVector(dx, dy, dz, r);
+				Math::EulerToMatrix(180.0f, 0.f, 0.f, childr);
+				Math::MultiplyMatrices(childr, r);
+				PerPos = PerPos + Vector(dx, dy, 0);
+				mDummyRedirect.SetRotation(childr[0], childr[1], childr[2], childr[3], childr[4], childr[5], childr[6], childr[7], childr[8]);
+				mDummyRedirect.SetPosition(PerPos);
+				mDummyRedirect.UpdatePlacement();
+				mDummyRedirect.PushActionExecuteCommand(ACTION_NEWLIST, DUMMY_DIRECTIONALLIGHTS, Target, childID, false);
+				mDummyRedirect.SetSelectable(false);
+			}
+
+			int PlayerID = v.GetPlayerMP();
+			mDummy.SetPlayerMP(PlayerID);
+			mDummyRedirect.SetPlayerMP(PlayerID);
+
+			int UnitID = v.GetID();
+			mDummy.SetUserData(UnitID);
+			mDummyRedirect.SetUserData(UnitID);
+
+			if (v.HasObjectPath(PATH_PATROL01) || v.HasObjectPath(PATH_PATROL02) || v.HasObjectPath(PATH_PATROL03))
+			{
+				Game::ExecuteCommand(DUMMY_PATROL, &v, &v);
+			}
+
+			v.EnableSpecialLights(true);
+			v.AssignCommand(CMD_DIRECTIONALLIGHTS_OFF); 
+			v.RemoveCommand(CMD_DIRECTIONALLIGHTS_ON);
+		//} else
+		//{
+		// 	Mission::PlayHint(HINT_DIRECTIONAL);
+		//}
+ 	}	
+};
+
+object VcmdDirectionalLightsOff : CommandScript
+{
+ 	VcmdDirectionalLightsOff()
+ 	{
+ 		SetIcon("directionaloff");
+ 		SetCursor("directionaloff");
+ 		SetGroupID(DummyGroup);
+ 		SetGroupLeader(true);
+ 		SetRestrictions(RESTRICT_SELFEXECUTE);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 		if (!Caller->IsValid())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return false;
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		if (!Caller->IsValid() || !Target->IsValid() || Target->GetID() != Caller->GetID())
+ 			return false;
+ 
+ 		if (Caller->GetType() == ACTOR_VEHICLE)
+ 		{
+ 			return true;
+ 		}
+ 
+ 		return true;
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Caller);
+
+		int UnitID = v.GetID();
+		GameObjectList list = Game::GetGameObjects(NAME_REDIRECT);
+		for(int i = 0; i < list.GetNumObjects(); i++)
+		{
+			GameObject *obj = list.GetObject(i);
+			if (obj->GetUserData() == UnitID)
+			{
+				obj->PushActionDeleteOwner(ACTION_NEWLIST);
+			}
+		}
+
+		GameObjectList list2 = Game::GetGameObjects(NAME_DUMMYREDIRECT);
+		for(int i = 0; i < list2.GetNumObjects(); i++)
+		{
+			GameObject *obj = list2.GetObject(i);
+			if (obj->GetUserData() == UnitID)
+			{
+				obj->PushActionDeleteOwner(ACTION_NEWLIST);
+			}
+		}
+ 
+		v.EnableSpecialLights(false);
+		v.AssignCommand(CMD_DIRECTIONALLIGHTS_ON); 
+		v.RemoveCommand(CMD_DIRECTIONALLIGHTS_OFF);
+ 	}	
+};
+
+object DummyDirectionalLights : CommandScript
+{
+ 	DummyDirectionalLights()
+ 	{
+ 		SetGroupID(DummyGroup);
+ 	}
+ 
+ 	bool CheckPossible(GameObject *Caller)
+ 	{
+ 	}
+ 
+ 	bool CheckTarget(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 	}
+ 
+	void PushActions(GameObject *Caller, Actor *Target, int childID)
+ 	{
+ 		Vehicle v(Target);
+		GameObject mDummy(Caller);
+
+		if (v.IsDestroyed() || !v.IsValid() || v.IsSmoking() || v.IsCurrentAction(EACTION_FINDPATH))
+		{
+			int UnitID = v.GetID();
+			GameObjectList list = Game::GetGameObjects(NAME_REDIRECT);
+			for(int i = 0; i < list.GetNumObjects(); i++)
+			{
+				GameObject *obj = list.GetObject(i);
+				if (obj->GetUserData() == UnitID)
+				{
+					obj->PushActionDeleteOwner(ACTION_NEWLIST);
+				}
+			}
+
+			v.EnableSpecialLights(false);
+			v.AssignCommand(CMD_DIRECTIONALLIGHTS_ON); 
+			v.RemoveCommand(CMD_DIRECTIONALLIGHTS_OFF);
+
+			mDummy.PushActionDeleteOwner(ACTION_NEWLIST);
+		} else
+		{
+			mDummy.PushActionWait(ACTION_NEWLIST, 1.0f);
+			mDummy.PushActionExecuteCommand(ACTION_APPEND, DUMMY_DIRECTIONALLIGHTS, Target, childID, false);
+		}			
+ 	}	
+};
