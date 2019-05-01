@@ -160,579 +160,247 @@ object VCmdSiren : CommandScript
 
 				// Debut declaration vehicules de pompier
 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER1) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
-					v.AttachSound(soundID);
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER1) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
 				}
-
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER2) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VSAV_SIN.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER3) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VSAV_SIN.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER4) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-							
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER5) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VLI.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER6) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER7) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER8) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER11) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt_douai.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER12) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER13) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER14) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccr.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER15) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccfm.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER16) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccfm.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER17) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER18) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/epa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER19) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/epa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER22) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER23) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER24) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VLHR.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER25) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/01VLC.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER26) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER27) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/FC1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER28) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 								
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER30) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VRCH.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER31) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER32) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER33) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/CDHR.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER34) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER35) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER36) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VRCH.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
- 				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER37) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER38) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER2) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VSAV_SIN.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER3) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VSAV_SIN.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER4) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER5) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VLI.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER6) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER7) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER8) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/vsav_newmaster.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER11) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt_douai.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER12) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER13) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER14) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccr.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER15) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccfm.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER16) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ccfm.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER17) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER18) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/epa.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER19) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/epa.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER22) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER23) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER24) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VLHR.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER25) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/01VLC.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER26) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER27) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/FC1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER28) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER30) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VRCH.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER31) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER32) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER33) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/CDHR.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER34) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER35) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER36) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/VRCH.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER37) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/EMOD.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER38) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/fpt.wav", CarPos, true);
+				}
 				// Fin declaration vehicules de pompier
 				
 			
 			
 				//Vehicules de Ambulance - debut
 							
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM1) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_lens.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM2) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_douai.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM3) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_va.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH1) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_va.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH2) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ar.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH3) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/samu.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-					if (StrCompare(v.GetPrototypeFileName(), PROTO_ASSU) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM1) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_lens.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM2) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_douai.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_VLM3) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_va.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH1) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/smur_va.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH2) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/ar.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_UMH3) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/samu.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_ASSU) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
+				}
 				//Vehicules de Ambulance - fin
 				
-				
-
 				// Déclarations de véhicules de la police - debut
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_ESTATE_PN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_BERLINGOT) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_PEUGEOT_308) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_SCENIC_PN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC_CRS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_BUS_CRS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-								
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRANSIT) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER_BAL) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER_CRS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_CANON_CRS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_DEMINAGE) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_GOLF) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_C4_BANA) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_ESTATE_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_KANGOO_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_C4_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TEPEE_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_IVECO_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_SUBARU) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MEGANE_RS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_FOCUS_RS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_AUDI_A6) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_C8_RAID) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_FOUR_BRI) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRANSIT_CRS) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_TEPEE_POLM) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_CLIO_POLM) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MOTO_GN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_MOTO_PN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-
-
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_ESTATE_PN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_BERLINGOT) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_PEUGEOT_308) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_SCENIC_PN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC_CRS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_BUS_CRS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRANSIT) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER_BAL) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MASTER_CRS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_CANON_CRS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_DEMINAGE) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_GOLF) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_C4_BANA) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_ESTATE_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_KANGOO_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_C4_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRAFIC_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TEPEE_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_IVECO_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_SUBARU) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MEGANE_RS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_FOCUS_RS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_AUDI_A6) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_C8_RAID) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_FOUR_BRI) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TRANSIT_CRS) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_TEPEE_POLM) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_CLIO_POLM) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MOTO_GN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/gendarmerie.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MOTO_PN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/police_1.wav", CarPos, true);
+				}
 				// Déclarations de véhicules de la police - fin
 				
 				
 				//Vehicules de TEC - debut
-
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_EDF) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_VP8) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
-				if (StrCompare(v.GetPrototypeFileName(), PROTO_SAN) == 0)
- 				{
- 					
- 					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
-					v.AttachSound(soundID);
- 				}
-				
-				
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_EDF) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_VP8) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_SAN) == 0) { 
+					soundID = Audio::PlaySample3D("mod:Audio/FX/Sirens/asa.wav", CarPos, true);
+				}
 				//Vehicules de TEC - fin
-
 				
+				v.AttachSound(soundID);
 				GameObject mDummy =  Game::CreateObject("mod:Prototypes/Objects/Misc/empty.e4p", NAME_DUMMYOBJECT);
 
 				if (Game::IsMultiplayer())
@@ -746,7 +414,6 @@ object VCmdSiren : CommandScript
 				mDummy.PushActionExecuteCommand(ACTION_NEWLIST, DUMMY_UPDATEPOS, &v, soundID, false);
 				v.SetUserData(soundID);
 				v.AssignCommand(DUMMY_HASSIREN);
-
 			return;
 		}
 

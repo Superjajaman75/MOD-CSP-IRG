@@ -201,7 +201,8 @@ object VcmdToFireStation : CommandScript
 			GameObject *veh = l1.GetObject(i);
 			if(StrCompare(veh->GetPrototypeFileName(), PROTO) == 0) {
 				Mission::PlayHint(HINT_NOSPACE);
-				veh->PushActionReturnToBase(ACTION_NEWLIST);
+				v.PushActionReturnToBase(ACTION_NEWLIST);
+				return;
 			}
 		}
 		
