@@ -46,6 +46,8 @@
 	<portrait prototype="mod:Prototypes/Vehicles/03 LA Police/as350_lapd.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/c8_raid.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/bri.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/307_bac.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/308_bac.e4p" count="1" />
 
 
 

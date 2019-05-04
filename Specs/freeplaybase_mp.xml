@@ -49,6 +49,8 @@
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/BMW1200RTPN.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/c8_raid.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/bri.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/307_bac.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/308_bac.e4p" count="1" />
 	
 	
 	
