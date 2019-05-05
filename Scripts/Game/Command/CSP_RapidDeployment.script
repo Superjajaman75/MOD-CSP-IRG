@@ -393,6 +393,7 @@ object VcmdRapidDeployment : CommandScript
 				v.PushActionExecuteCommand(ACTION_APPEND, "VcmdPumpSwitch", &v, 0, false);			
 		}
 
+
 		//	RAPID DEPLOY FOR LADDER VEHICLES
 		else if (v.GetVehicleType() == VT_FIREFIGHTERS_DLK && !v.IsInstalled())
 		{
@@ -434,9 +435,9 @@ object VcmdRapidDeployment : CommandScript
 						if (l1.GetPerson(i)->HasCommand("AttachFireHose"))
 						{
 							Person *p = l1.GetPerson(i);
-							if (Pcnt == 0 && NearbyHydrantFound)
-							{	
-								p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+							p->PushActionLeaveCar(ACTION_NEWLIST, &v);
+							if (Pcnt == 0 && v.IsChildEnabled("water_supply") && NearbyHydrantFound)
+							{
 								p->PushActionMove(ACTION_APPEND, &v, TARGET_EQUIPMENTDOOR);
 								p->PushActionTurnTo(ACTION_APPEND, &v);
 								p->PushActionGetEquipment(ACTION_APPEND, &v, EQUIP_FIREHOSE);
@@ -444,12 +445,10 @@ object VcmdRapidDeployment : CommandScript
 								p->PushActionUseEquipment(ACTION_APPEND, hydrant, childID, 1.0f);
 								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 3, false);
 								p->PushActionExecuteCommand(ACTION_APPEND, "AttachFireHose", &v, 0, false);
-								p->PushActionExecuteCommand(ACTION_APPEND, "EnterBasket", &v, 0, false);
-							}	
-							else if (Pcnt == 0 && !NearbyHydrantFound)
-							{
-								Game::ShowHelpTextWindow(HINT_NONEARWATER, 2.f);
+								p->PushActionExecuteCommand(ACTION_APPEND, "EnterCar", &v, childID, false);
 							} 
+							if (Pcnt == 1)
+								p->PushActionExecuteCommand(ACTION_APPEND, "EnterBasket", &v, 0, false);
 							Pcnt++;
 						}
 					}
