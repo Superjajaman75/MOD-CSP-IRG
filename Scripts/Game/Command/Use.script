@@ -14,7 +14,7 @@ object Use : CommandScript
 {
 	Use()
 	{
-		SetValidTargets(ACTOR_OBJECT | ACTOR_HOUSE | ACTOR_OPEN_HOUSE);
+		SetValidTargets(ACTOR_OBJECT | ACTOR_HOUSE | ACTOR_OPEN_HOUSE | ACTOR_VEHICLE);
 		SetRestrictions(RESTRICT_USABLE);
 		SetPriority(700);
 		SetSelfClickActivation(true);
