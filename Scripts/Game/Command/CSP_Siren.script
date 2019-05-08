@@ -48,6 +48,7 @@ const char PROTO_POMPIER35[] = "mod:Prototypes/Vehicles/Fire Department/fmogp.e4
 const char PROTO_POMPIER36[] = "mod:Prototypes/Vehicles/Fire Department/VIRT2.e4p";
 const char PROTO_POMPIER37[] = "mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p";
 const char PROTO_POMPIER38[] = "mod:Prototypes/Vehicles/Fire Department/VTU.e4p";
+const char PROTO_POMPIER39[] = "mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p";
 
 
 // SAMU
@@ -238,7 +239,7 @@ object VCmdSiren : CommandScript
 					soundID = Audio::PlaySample3D(AUDIO_VLHR, CarPos, true);
 				}
 				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER25) == 0) {
-					soundID = Audio::PlaySample3D(AUDIO_VLC, CarPos, true);
+					soundID = Audio::PlaySample3D(AUDIO_EMOD, CarPos, true);
 				}
 				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER26) == 0) {
 					soundID = Audio::PlaySample3D(AUDIO_FPT2, CarPos, true);
@@ -275,6 +276,9 @@ object VCmdSiren : CommandScript
 				}
 				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER38) == 0) {
 					soundID = Audio::PlaySample3D(AUDIO_FPT2, CarPos, true);
+				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_POMPIER39) == 0) {
+					soundID = Audio::PlaySample3D(AUDIO_VSAV1, CarPos, true);
 				}
 				// Fin declaration vehicules de pompier
 				

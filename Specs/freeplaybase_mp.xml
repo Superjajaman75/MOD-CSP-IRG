@@ -88,6 +88,7 @@
 	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p" count="5" />	
 	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/bateau.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/VTU.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p" count="1" />
 	
 		<!--10 TEC-->
 	<vehicle prototype="mod:Prototypes/Vehicles/TEC/erdf.e4p" count="2" />

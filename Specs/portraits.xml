@@ -89,6 +89,7 @@
 	<portrait prototype="mod:Prototypes/Vehicles/Fire Department/VTU.e4p" unit="VTU" />	
 	<portrait prototype="mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p" unit="VTPSP" />	
 	<portrait prototype="mod:Prototypes/Vehicles/Fire Department/bateau.e4p" unit="Bateau" />
+	<portrait prototype="mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p" unit="VSAV Cube" />
 
 	
 		<!--10 TEC-->
