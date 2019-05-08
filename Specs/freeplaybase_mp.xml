@@ -51,6 +51,7 @@
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/bri.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/307_bac.e4p" count="1" />
 	<vehicle prototype="mod:Prototypes/Vehicles/Police/308_bac.e4p" count="1" />
+	<vehicle prototype="mod:Prototypes/Vehicles/Police/megane3.e4p" count="1" />
 	
 	
 	

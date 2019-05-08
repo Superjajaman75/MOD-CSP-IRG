@@ -94,6 +94,7 @@ const char PROTO_TEPEE_POLM[] = "mod:Prototypes/Vehicles/Police/TepeePolm.e4p";
 const char PROTO_CLIO_POLM[] = "mod:Prototypes/Vehicles/Police/cliopolm.e4p";
 const char PROTO_MOTO_GN[] = "mod:Prototypes/Vehicles/Police/BMW1200RT.e4p";
 const char PROTO_MOTO_PN[] = "mod:Prototypes/Vehicles/Police/BMW1200RTPN.e4p";
+const char PROTO_MEGANE_PN[] = "mod:Prototypes/Vehicles/Police/megane3.e4p";
 
 
 //TEC
@@ -404,6 +405,9 @@ object VCmdSiren : CommandScript
  					soundID = Audio::PlaySample3D(AUDIO_PN, CarPos, true);
  				}
 				if (StrCompare(v.GetPrototypeFileName(), PROTO_308_BAC) == 0) {
+ 					soundID = Audio::PlaySample3D(AUDIO_PN, CarPos, true);
+ 				}
+				if (StrCompare(v.GetPrototypeFileName(), PROTO_MEGANE_PN) == 0) {
  					soundID = Audio::PlaySample3D(AUDIO_PN, CarPos, true);
  				}
 				// Déclarations de véhicules de la police - fin

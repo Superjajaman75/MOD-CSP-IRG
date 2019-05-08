@@ -15,6 +15,7 @@
 		
 		<!--06 POLICE-->
 	<portrait prototype="mod:Prototypes/Vehicles/Police/estatepn.e4p" unit="Megane Estate Police Nationale" />
+	<portrait prototype="mod:Prototypes/Vehicles/Police/megane3.e4p" unit="Megane 3 Police Nationale" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/berlingo.e4p" unit="Berlingo Police Nationale" />	
 	<portrait prototype="mod:Prototypes/Vehicles/Police/peugeot308.e4p" unit="Peugeot 308 Police Nationale" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/VP_Scenic.e4p" unit="Scenic Police Nationale" />	
