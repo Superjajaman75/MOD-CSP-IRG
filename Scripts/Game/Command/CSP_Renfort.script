@@ -6,7 +6,6 @@
 //
 //******************************************************************************************
 
-//{ REGION CONST
 const char CMD_SIREN[]					= "VcmdSiren";
 const char CMD_AUTOSIREN_OFF[]			= "VcmdAutoSirenOff";
 const char CMD_WARNINGLIGHTS_OFF[] 	= "VcmdWarningLightsOff";
@@ -143,6 +142,7 @@ const char PROTO_DEMINAGE[]			= "mod:Prototypes/Vehicles/Police/deminage2.e4p";
 const char PROTO_ECUREUIL[]			= "mod:Prototypes/Vehicles/03 LA Police/as350_lapd.e4p";
 const char PROTO_ESTATEGN[]			= "mod:Prototypes/Vehicles/Police/estategendarmerie.e4p";
 const char PROTO_ESTATEPN[]			= "mod:Prototypes/Vehicles/Police/estatepn.e4p";
+const char PROTO_MEGANE[]			= "mod:Prototypes/Vehicles/Police/megane3.e4p";
 const char PROTO_FOCUS[]				= "mod:Prototypes/Vehicles/Police/ford_focusrs.e4p";
 const char PROTO_TEPEEGN[]				= "mod:Prototypes/Vehicles/Police/fp4v2.e4p";
 const char PROTO_BAC[]					= "mod:Prototypes/Vehicles/Police/golf_bac.e4p";
@@ -151,7 +151,7 @@ const char PROTO_KANGOOGN[]			= "mod:Prototypes/Vehicles/Police/Kangoo1.e4p";
 const char PROTO_MASTERCRS[]			= "mod:Prototypes/Vehicles/Police/Master_CRS.e4p";
 const char PROTO_MASTER[]				= "mod:Prototypes/Vehicles/Police/Master_PNfourgon.e4p";
 const char PROTO_MASTERBAL[]			= "mod:Prototypes/Vehicles/Police/master_policebalisage.e4p";
-const char PROTO_MEGANE[]				= "mod:Prototypes/Vehicles/Police/MeganeRS.e4p";
+const char PROTO_MEGANERS[]				= "mod:Prototypes/Vehicles/Police/MeganeRS.e4p";
 const char PROTO_308[]					= "mod:Prototypes/Vehicles/Police/peugeot308.e4p";
 const char PROTO_SUBARU[]				= "mod:Prototypes/Vehicles/Police/Subaru.e4p";
 const char PROTO_TEPEEPM[]				= "mod:Prototypes/Vehicles/Police/TepeePolm.e4p";
@@ -173,7 +173,6 @@ const char UNNAMED[] 					= "Unnamed";
 Vector myVector;
 char vo_spawn[20];
 
-//}
 
 
 class ClassRenfort: CommandScript
@@ -453,8 +452,7 @@ class ClassRenfort: CommandScript
 
 
 
-//Region Renfort
-//{
+
 object Renfort_VSAV : CommandScript
 {
 	Renfort_VSAV()
@@ -1222,6 +1220,25 @@ object Renfort_308 : CommandScript
 	}
 };
 
+object Renfort_MeganePN : CommandScript
+{
+	Renfort_MeganePN()
+	{
+		SetIcon("Megane");
+		SetCursor("callassistance");
+		//SetKeepAsCurrentCommand(true);
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		int personnelVehicule[6] = {16,16,16,0,0,0};
+		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_MEGANE, VT_POLICE_STW, VO_SQUADPOL, personnelVehicule, 3, 1);
+	}
+};
+
 object Renfort_BUS : CommandScript
 {
 	Renfort_BUS()
@@ -1541,7 +1558,7 @@ object Renfort_MeganeRSGN : CommandScript
 	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
 	{
 		int personnelVehicule[6] = {23,23,23,0,0,0};
-		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_MEGANE, VT_POLICE_STW, VO_SQUADPOL, personnelVehicule, 3, 1);
+		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_MEGANERS, VT_POLICE_STW, VO_SQUADPOL, personnelVehicule, 3, 1);
 	}
 };
 
@@ -1933,7 +1950,6 @@ object Renfort_Depanneuse : CommandScript
 	}
 };
 
-//}
 
 object Renfort_Ecureuil : CommandScript
 {
