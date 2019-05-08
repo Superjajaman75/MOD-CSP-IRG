@@ -3,6 +3,7 @@ const char CMD_VSAV2[]		= "Renfort_VSAV2";
 const char CMD_VSAV3[]		= "Renfort_VSAV3";
 const char CMD_VSAV4[]		= "Renfort_VSAV4";
 const char CMD_VSAVHR[]		= "Renfort_VSAVHR";
+const char CMD_VSAVAR[]		= "Renfort_VSAVAR";
 const char CMD_VLI1[]			= "Renfort_VLI1";
 const char CMD_VLI2[]			= "Renfort_VLI2";
 const char CMD_VSS[]			= "Renfort_VSS";
@@ -133,6 +134,8 @@ object COSSAP : CommandScript
 		Caller->EnableCommand(CMD_VSAV3, true);
 		Caller->AssignCommand(CMD_VSAV4);
 		Caller->EnableCommand(CMD_VSAV4, true);
+		Caller->AssignCommand(CMD_VSAVAR);
+		Caller->EnableCommand(CMD_VSAVAR, true);
 		Caller->AssignCommand(CMD_VSAVHR);
 		Caller->EnableCommand(CMD_VSAVHR, true);
 		Caller->AssignCommand(CMD_VLI1);

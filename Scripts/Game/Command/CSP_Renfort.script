@@ -83,6 +83,7 @@ const char PROTO_VSAV2[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavDoua
 const char PROTO_VSAV3[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
 const char PROTO_VSAV4[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p";
 const char PROTO_VSAVHR[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p";
+const char PROTO_VSAVAR[] 				= "mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p";
 const char PROTO_VSS[] 				= "mod:Prototypes/Vehicles/Fire Department/VSS_HD.e4p";
 const char PROTO_VLI1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
 const char PROTO_VLI2[] 				= "mod:Prototypes/Vehicles/Fire Department/VLI1.e4p";
@@ -374,7 +375,7 @@ class ClassRenfort: CommandScript
 			GameObject obj_spawn;
 			if (spawn_List.GetNumObjects() == 1)
 			{
-				System::Log("test trouve");
+				System::Log("[RENFORT] spawn trouve");
 				obj_spawn = spawn_List.GetObject(0);
 			} else {
 				System::Log("[RENFORT] spawn non trouve");
@@ -546,6 +547,25 @@ object Renfort_VSAVHR : CommandScript
 	{
 		int personnelVehicule[6] = {2,3,0,0,0,0};
 		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_VSAVHR, VT_AMBULANCE_RTW, VO_SQUADCPI, personnelVehicule, 3, 1);
+	}
+};
+
+object Renfort_VSAVAR : CommandScript
+{
+	Renfort_VSAVAR()
+	{
+		SetIcon("VSAVAR");
+		SetCursor("callassistance");
+		//SetKeepAsCurrentCommand(true);
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		int personnelVehicule[6] = {2,3,13,0,0,0};
+		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_VSAVAR, VT_AMBULANCE_RTW, sNULL, personnelVehicule, 3, 1);
 	}
 };
 
