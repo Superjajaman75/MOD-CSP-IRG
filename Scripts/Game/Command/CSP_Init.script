@@ -122,6 +122,7 @@ class ClassSpawn: CommandScript
 			newVeh.SetPlayerMP(Caller->GetPlayerMP());
 			newVeh.EnableBlueLights(false);
 			newVeh.EnableHeadLights(false);
+			newVeh.EnableSpecialLights(false);
 		} else {
 			System::Log("[INIT] veh non trouve");
 		}

@@ -146,6 +146,8 @@ const char PROTO_MEGANE[]			= "mod:Prototypes/Vehicles/Police/megane3.e4p";
 const char PROTO_FOCUS[]				= "mod:Prototypes/Vehicles/Police/ford_focusrs.e4p";
 const char PROTO_TEPEEGN[]				= "mod:Prototypes/Vehicles/Police/fp4v2.e4p";
 const char PROTO_BAC[]					= "mod:Prototypes/Vehicles/Police/golf_bac.e4p";
+const char PROTO_BAC307[]					= "mod:Prototypes/Vehicles/Police/307_bac.e4p";
+const char PROTO_BAC308[]					= "mod:Prototypes/Vehicles/Police/308_bac.e4p";
 const char PROTO_IVECO[]				= "mod:Prototypes/Vehicles/Police/Ivecogendarmerie.e4p";
 const char PROTO_KANGOOGN[]			= "mod:Prototypes/Vehicles/Police/Kangoo1.e4p";
 const char PROTO_MASTERCRS[]			= "mod:Prototypes/Vehicles/Police/Master_CRS.e4p";
@@ -1277,6 +1279,46 @@ object Renfort_BAC : CommandScript
 	}
 };
 
+
+object Renfort_BAC307 : CommandScript
+{
+	Renfort_BAC307()
+	{
+		SetIcon("307");
+		SetCursor("callassistance");
+		//SetKeepAsCurrentCommand(true);
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		int personnelVehicule[6] = {25,25,25,0,0,0};
+		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_BAC307, VT_POLICE_STW, VO_SQUADPOL, personnelVehicule, 3, 1);	
+	}
+};
+
+
+object Renfort_BAC308 : CommandScript
+{
+	Renfort_BAC308()
+	{
+		SetIcon("308");
+		SetCursor("callassistance");
+		//SetKeepAsCurrentCommand(true);
+		SetValidTargets(ACTOR_FLOOR | ACTOR_VIRTUAL);
+	}
+
+	bool CheckTarget(GameObject *Caller, Actor *Target, int childID){return true;}
+
+	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
+	{
+		int personnelVehicule[6] = {25,25,25,0,0,0};
+		ClassRenfort::Renfort(Caller, Game::GetCommandPos(), PROTO_BAC308, VT_POLICE_STW, VO_SQUADPOL, personnelVehicule, 3, 1);	
+	}
+};
+
 object Renfort_BerlingoPN : CommandScript
 {
 	Renfort_BerlingoPN()
@@ -1696,9 +1738,9 @@ object Renfort_TransitCRS : CommandScript
 	}
 };
 
-object Renfort_TrasnitPN : CommandScript
+object Renfort_TransitPN : CommandScript
 {
-	Renfort_TrasnitPN()
+	Renfort_TransitPN()
 	{
 		SetIcon("Transit PN");
 		SetCursor("callassistance");
