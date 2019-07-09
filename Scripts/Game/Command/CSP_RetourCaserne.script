@@ -35,12 +35,11 @@ const char OBJ_PC1[]					= "mod:Prototypes/Vehicles/Fire Department/vpc-redeploy
 const char OBJ_VSAV1[]					= "mod:Prototypes/Vehicles/Fire Department/vsav1master.e4p";
 const char OBJ_VSAV2[]					= "mod:Prototypes/Vehicles/Fire Department/vsavDouai.e4p";
 const char OBJ_VSAV3[]					= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
+const char OBJ_VSAVAR[]					= "mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p";
 const char OBJ_VLI1[]					= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
 const char OBJ_VLI2[]					= "mod:Prototypes/Vehicles/Fire Department/VLI1.e4p";
 const char OBJ_VPL1[]					= "mod:Prototypes/Vehicles/Fire Department/vpl_HD.e4p";
-const char OBJ_VLC1[]					= "mod:Prototypes/Vehicles/Fire Department/VLC.e4p";
-const char OBJ_EMOD41[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD32.e4p";
-const char OBJ_EMOD42[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD4.e4p";
+const char OBJ_EMOD4[]					= "mod:Prototypes/Vehicles/Fire Department/EMOD4.e4p";
 const char OBJ_CDHR[]					= "mod:Prototypes/Vehicles/Fire Department/CDHR.e4p";
 const char OBJ_VSS1[]					= "mod:Prototypes/Vehicles/Fire Department/VSS_HD.e4p";
 const char OBJ_PMA1[]					= "mod:Prototypes/Vehicles/Fire Department/PMA.e4p";
@@ -53,7 +52,7 @@ const char OBJ_VTP[] 					= "mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p";
 const char OBJ_CCF1[]					= "mod:Prototypes/Vehicles/Fire Department/CCF1.e4p";
 const char OBJ_CCFS[]					= "mod:Prototypes/Vehicles/Fire Department/CCFS1.e4p";
 const char OBJ_VSAVHR5[]				= "mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p";
-const char OBJ_EMOD43[]				= "mod:Prototypes/Vehicles/Fire Department/vl9.e4p";
+const char OBJ_VLTT[]					= "mod:Prototypes/Vehicles/Fire Department/vl9.e4p";
 const char OBJ_VSAV4[]					= "mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p";
 const char OBJ_FPTL1[]					= "mod:Prototypes/Vehicles/Fire Department/FPTL68.e4p";
 	
@@ -90,6 +89,7 @@ const char SND_TOSTATION20[]			= "mod:Audio/FX/radio/vtu.wav";
 const char SND_TOSTATION21[]			= "mod:Audio/FX/radio/pma.wav";
 const char SND_TOSTATION22[]			= "mod:Audio/FX/radio/umh.wav";
 const char SND_TOSTATION23[]			= "mod:Audio/FX/radio/vlm.wav";
+const char SND_TOSTATION24[]			= "mod:Audio/FX/radio/vsav.wav";
 	
 const char HINT_NOTVALID[] 				= "Ce vehicule ne fait pas partie de la caserne, il rentre a la base!";
 const char HINT_NOSPACE[] 				= "Pas de place a la caserne, le vehicule retourne a la base!";
@@ -262,28 +262,29 @@ object VcmdToFireStation : CommandScript
 		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VSAV4) == 0)
 		{
-			FirstReturnParking(Caller, "vsav4", VO_SQUADCPI, OBJ_VSAV4,"");
+			FirstReturnParking(Caller, "vsav4", VO_SQUADCPI, OBJ_VSAV4,SND_TOSTATION24);
+		}
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VSAVAR) == 0)
+		{
+			FirstReturnParking(Caller, "vsavar", VO_SQUADCSP, OBJ_VSAVAR,SND_TOSTATION24);
 		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLI1) == 0)
 		{
-			FirstReturnParking(Caller, "vli", VO_SQUADCSP, OBJ_VLI1, SND_TOSTATION9);
+			FirstReturnParking(Caller, "vli1", VO_SQUADCSP, OBJ_VLI1, SND_TOSTATION9);
+		}
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLI2) == 0)
+		{
+			FirstReturnParking(Caller, "vli2", VO_SQUADCSP, OBJ_VLI2, SND_TOSTATION9);
 		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VPL1) == 0)
 		{
 			FirstReturnParking(Caller, "vpl", VO_SQUADCSP, OBJ_VPL1, SND_TOSTATION11);
 		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLC1) == 0)
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD4) == 0)
 		{
-			FirstReturnParking(Caller, "vlc", VO_SQUADCSP, OBJ_VLC1, SND_TOSTATION8);
+			FirstReturnParking(Caller, "emod4", VO_SQUADCSP, OBJ_EMOD4,  SND_TOSTATION17);
 		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD41) == 0)
-		{
-			FirstReturnParking(Caller, "emod3", VO_SQUADCSP,OBJ_EMOD41,  SND_TOSTATION17);
-		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD42) == 0)
-		{
-			FirstReturnParking(Caller, "emod4", VO_SQUADCSP, OBJ_EMOD42, SND_TOSTATION17);
-		}
+
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLM1) == 0)
 		{
 			FirstReturnParking(Caller, "vlm1", VO_SQUADSAMU, OBJ_VLM1, SND_TOSTATION23);
@@ -336,9 +337,9 @@ object VcmdToFireStation : CommandScript
 		{
 			FirstReturnParking(Caller, "vsavhr", VO_SQUADCPI,OBJ_VSAVHR5,  SND_TOSTATION13);
 		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD43) == 0)
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLTT) == 0)
 		{
-			FirstReturnParking(Caller, "vltt", VO_SQUADCPI, OBJ_EMOD43, SND_TOSTATION17);
+			FirstReturnParking(Caller, "vltt", VO_SQUADCPI, OBJ_VLTT, SND_TOSTATION17);
 		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VSS1) == 0)
 		{
@@ -484,23 +485,23 @@ object DummyCheckParked : CommandScript
 		{
 			EndReturnParking(Caller, "vsav4");
 		}
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VSAVAR) == 0)
+		{
+			EndReturnParking(Caller, "vsavar");
+		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLI1) == 0)
 		{
-			EndReturnParking(Caller, "vli");
+			EndReturnParking(Caller, "vli1");
+		}
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLI2) == 0)
+		{
+			EndReturnParking(Caller, "vli2");
 		}
 		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VPL1) == 0)
 		{
 			EndReturnParking(Caller, "vpl");
 		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLC1) == 0)
-		{
-			EndReturnParking(Caller, "vlc");
-		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD41) == 0)
-		{
-			EndReturnParking(Caller, "emod3");
-		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD42) == 0)
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD4) == 0)
 		{
 			EndReturnParking(Caller, "emod4");
 		}
@@ -556,7 +557,7 @@ object DummyCheckParked : CommandScript
 		{
 			EndReturnParking(Caller, "vsavhr");
 		}
-		else if(StrCompare(v.GetPrototypeFileName(), OBJ_EMOD43) == 0)
+		else if(StrCompare(v.GetPrototypeFileName(), OBJ_VLTT) == 0)
 		{
 			EndReturnParking(Caller, "vltt");
 		}

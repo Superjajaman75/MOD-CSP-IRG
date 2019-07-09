@@ -11,8 +11,10 @@ const char PROTO_VSAV2[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavDoua
 const char PROTO_VSAV3[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAV6.e4p";
 const char PROTO_VSAV4[] 				= "mod:Prototypes/Vehicles/Fire Department/VSAVsin.e4p";
 const char PROTO_VSAVHR[] 				= "mod:Prototypes/Vehicles/Fire Department/vsavhr.e4p";
+const char PROTO_VSAVAR[] 				= "mod:Prototypes/Vehicles/Fire Department/AR_SP.e4p";
 const char PROTO_VSS[] 					= "mod:Prototypes/Vehicles/Fire Department/VSS_HD.e4p";
-const char PROTO_VLI1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
+const char PROTO_VLI1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLI1.e4p";
+const char PROTO_VLI2[] 				= "mod:Prototypes/Vehicles/Fire Department/VLIDOUAI.e4p";
 
 const char PROTO_VTP[] 					= "mod:Prototypes/Vehicles/Fire Department/VTPSP.e4p";
 const char PROTO_VTU1[]					= "mod:Prototypes/Vehicles/Fire Department/2.e4p";
@@ -25,7 +27,6 @@ const char PROTO_CDHR[] 				= "mod:Prototypes/Vehicles/Fire Department/CDHR.e4p"
 const char PROTO_CMIC1[]				= "mod:Prototypes/Vehicles/Fire Department/VIRT2.e4p";
 const char PROTO_VRAAD[]				= "mod:Prototypes/Vehicles/Fire Department/vraad.e4p";
 const char PROTO_EMOD4[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD4.e4p";
-const char PROTO_EMOD3[]				= "mod:Prototypes/Vehicles/Fire Department/EMOD32.e4p";
 const char PROTO_VLTT[]					= "mod:Prototypes/Vehicles/Fire Department/vl9.e4p";
 const char PROTO_EPA1[] 				= "mod:Prototypes/Vehicles/Fire Department/EPA_Scania.e4p";
 const char PROTO_FC1[] 					= "mod:Prototypes/Vehicles/Fire Department/FCnoinstal.e4p";
@@ -36,7 +37,6 @@ const char PROTO_FPTL[] 				= "mod:Prototypes/Vehicles/Fire Department/FPTL68.e4
 const char PROTO_FSR1[] 				= "mod:Prototypes/Vehicles/Fire Department/FSR2.e4p";
 const char PROTO_VPC[] 					= "mod:Prototypes/Vehicles/Fire Department/vpc-redeployer.e4p";
 const char PROTO_PMA[] 					= "mod:Prototypes/Vehicles/Fire Department/PMA.e4p";
-const char PROTO_VLC1[] 				= "mod:Prototypes/Vehicles/Fire Department/VLC.e4p";
 const char PROTO_VPL1[] 				= "mod:Prototypes/Vehicles/Fire Department/vpl_HD.e4p";
 
 
@@ -149,8 +149,6 @@ object Init_CSP : CommandScript
 	void PushActions(GameObject *Caller, Actor *Target, int ChildID)
 	{
 		ClassSpawn::Create(Caller, PROTO_EMOD4,  "emod4", 1, 0);
-		ClassSpawn::Create(Caller, PROTO_EMOD3,  "emod3", 1, 0);
-		ClassSpawn::Create(Caller, PROTO_VLC1,  "vlc", 1, 0);
 		ClassSpawn::Create(Caller, PROTO_VRAAD,  "vrad", 3, 2);
 		ClassSpawn::Create(Caller, PROTO_CMIC1,  "cmic", 3, 2);
 		ClassSpawn::Create(Caller, PROTO_VTU2,  "vtu", 3, 0);
@@ -240,7 +238,9 @@ object Init_MEDSP : CommandScript
 		ClassSpawn::Create(Caller, PROTO_VSAV3,  "vsav3", 3, 1);
 		ClassSpawn::Create(Caller, PROTO_VSAV4,  "vsav4", 3, 1);
 		ClassSpawn::Create(Caller, PROTO_VSAVHR,  "vsavhr", 3, 1);
-		ClassSpawn::Create(Caller, PROTO_VLI1,  "vli", 3, 0);
+		ClassSpawn::Create(Caller, PROTO_VSAVAR,  "vsavar", 3, 1);
+		ClassSpawn::Create(Caller, PROTO_VLI1,  "vli1", 2, 0);
+		ClassSpawn::Create(Caller, PROTO_VLI2,  "vli2", 2, 0);
 	}
 };
 

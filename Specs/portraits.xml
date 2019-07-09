@@ -32,7 +32,7 @@
 	<portrait prototype="mod:Prototypes/Vehicles/Police/deminage2.e4p" unit="Deminage" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/golf_bac.e4p" unit="Golf_Banalise" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/307_bac.e4p" unit="307_Banalise" />
-	<portrait prototype="mod:Prototypes/Vehicles/Police/308_bac.e4p" unit="308_Banalise	" />
+	<portrait prototype="mod:Prototypes/Vehicles/Police/308_bac.e4p" unit="308_Banalise" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/c4_bana.e4p" unit="C4 Banalisé GN" />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/estategendarmerie.e4p" unit="Megane Estate Gendarmerie Nationale " />
 	<portrait prototype="mod:Prototypes/Vehicles/Police/Kangoo1.e4p" unit="Kangoo_GN" />
@@ -142,6 +142,6 @@
 	
 	<portrait prototype="mod:Prototypes/Persons/TEC/bspp_erdf.e4p" big="edf-grdf" unit="ERDF" text="edf-grdf"/>
 	<portrait prototype="mod:Prototypes/Persons/TEC/bspp_dde1.e4p" big="dde-dir" unit="DDE" text="dde-dir"/>
-	<portrait prototype="mod:Prototypes/Persons/TEC/cost.e4p" big="cost" unit="COS_T" text="COS_T"/>
+	<portrait prototype="mod:Prototypes/Persons/TEC/cost.e4p" big="costec" unit="COS_T" text="COS_T"/>
 	
 </portraits>

@@ -11,5 +11,5 @@ void start()
 	GameObjectList l1("gate_pol");
 	GameObject Obj = l1.GetObject(0);
  	Game::ExecuteCommand("DummyCheckWaterSupply", &Obj);
-	Game::ShowHelpTextWindow("Pour apprendre a jouer au Mod, regardez nos tutoriels sur : http://tuto.csp-irg.fr \nEn cas de probleme : http://helpdesk.csp-irg.fr \nRejoignez la communaute sur : http://forum.csp-irg.fr", 15.f);
+	Game::ShowHelpTextWindow("Pour apprendre a jouer au Mod, regardez nos tutoriels sur : http://tuto.csp-irg.fr \nRejoignez la communaute sur Discord (lien Launcher)", 15.f);
 };
